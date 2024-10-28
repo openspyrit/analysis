@@ -13,6 +13,8 @@ from spas.metadata2 import read_metadata
 import scipy.signal as sg
 import scipy.optimize as op
 from scipy import interpolate
+from preprocessing import func620, func634
+
 
 import os
 import time
@@ -46,75 +48,10 @@ wavelengths = acquisition_params.wavelengths
 
 
  #%% REFERENCE SPECTRA # this part has been moved outside of the loop
- 
-##########################################################################################
-# @todo : remove this part, import interpolated spectra instead
-    
-    
-folder_path_ref = 'C:/Users/chiliaeva/Documents/data_pilot-warehouse/ref/'
- 
-file_name_ppix620 = 'ref620_3lamda.npy'
-file_name_ppix634 = 'ref634_3lamda.npy'
-file_name_lambda = 'Lambda.npy'
- 
- 
-ppix620 = np.load(folder_path_ref + file_name_ppix620)
-ppix634 = np.load(folder_path_ref + file_name_ppix634)
-lambd = np.load(folder_path_ref + file_name_lambda)
- 
- 
-spectr634 = ppix634[0, :] 
-spectr634[0] = 0 # otherwise kernel dies
-spectr620 = ppix620[0, :]
-spectr620[0] = 0
- 
- 
- # Normalize the reference spectra
- 
-spectr620_norm = spectr620/np.amax(spectr620)
-spectr620 = spectr620_norm
-del spectr620_norm
- 
-spectr634_norm = spectr634/np.amax(spectr634)
-spectr634 = spectr634_norm
-del spectr634_norm
- 
- 
-crop_start = np.digitize(wavelengths[0], lambd, right=True) # crop the ref spectra, keep the part from wavelengths[0] to wavelengths[-1]
-crop_stop = np.digitize(wavelengths[-1], lambd, right=True)
 
-
-lambd_crop = lambd[crop_start:crop_stop]
-spectr620_crop = spectr620[crop_start:crop_stop]
-spectr634_crop = spectr634[crop_start:crop_stop]
-
-lambd = lambd_crop
-spectr620 = spectr620_crop
-spectr634 = spectr634_crop
-
-del lambd_crop
-del spectr620_crop
-del spectr634_crop
-
- 
- 
-# Interpolate the reference spectra 
- 
-func620 = interpolate.make_interp_spline(lambd, spectr620)  # interp1d is legacy
-func634 = interpolate.make_interp_spline(lambd, spectr634)
-
-spectr620_interp = func620(wavelengths) # import wavelengths from metadata
-spectr634_interp = func634(wavelengths)
-
-
-spectr620 = spectr620_interp
-spectr634 = spectr634_interp
-
-############################################################################################################
-
-
-
-
+# load interpolated and normalized ref spectra : 
+spectr620 = np.load(root + '_spectr620_interp.npy')
+spectr634 = np.load(root + '_spectr634_interp.npy')
 
 
 # Define fit function
