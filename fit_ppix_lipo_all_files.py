@@ -108,6 +108,8 @@ for f in folders :
         # Fit for every point of the mask
         t0 = time.time()
         print('start fit for the entire image', time.time()-t0)
+        
+        spectrum_tab = np.ndarray((cubehyper_laser.shape[0], cubehyper_laser.shape[1], np.size(wavelengths)), dtype='float64')
     
         for x_i in range(cubehyper_laser.shape[0]):
             for y_i in range(cubehyper_laser.shape[1]):
@@ -136,7 +138,7 @@ for f in folders :
         
                     # Remove the no light spectrum
                     spectrum = sp_laser_smth - sp_nolight_smth
-                    np.save(path + '/B' + str(num_biopsy) + '_' +  type_reco + '_spectrum.npy', spectrum)
+                    spectrum_tab[x_i, y_i, :] = spectrum
         
         
                     # FIT THE SPECTRUM TO REFERENCE SPECTRA
@@ -156,7 +158,7 @@ for f in folders :
                     popt_tab[x_i, y_i, :] = np.nan
                     
         print('end fit for image', time.time()-t0)  
-              
+        np.save(path + '/B' + str(num_biopsy) + '_' +  type_reco + '_spectrum_tab.npy', spectrum_tab)     
   
    
         if save_fit_data == True:
