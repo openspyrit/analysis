@@ -17,7 +17,7 @@ Output :
 import numpy as np
 import matplotlib.pyplot as plt
 from spas.metadata2 import read_metadata
-from fit_ppix_lipo_all_files import func_fit
+from main_fit import func_fit
 
 
 savefig = False
