@@ -17,7 +17,9 @@ from scipy import interpolate
 import os
 import time
 
+
 #%% Parameters
+
 
 root = 'D:/hspc/data/2024a/' # @todo : temporary, change
 folders = os.listdir(root)
@@ -42,8 +44,13 @@ wavelengths = acquisition_params.wavelengths
 
 
 
- #%% REFERENCE SPECTRA # this part has been moved outside of the loop
 
+ #%% REFERENCE SPECTRA # this part has been moved outside of the loop
+ 
+##########################################################################################
+# @todo : remove this part, import interpolated spectra instead
+    
+    
 folder_path_ref = 'C:/Users/chiliaeva/Documents/data_pilot-warehouse/ref/'
  
 file_name_ppix620 = 'ref620_3lamda.npy'
@@ -73,7 +80,7 @@ spectr634 = spectr634_norm
 del spectr634_norm
  
  
-crop_start = np.digitize(wavelengths[0], lambd, right=True)
+crop_start = np.digitize(wavelengths[0], lambd, right=True) # crop the ref spectra, keep the part from wavelengths[0] to wavelengths[-1]
 crop_stop = np.digitize(wavelengths[-1], lambd, right=True)
 
 
@@ -103,9 +110,10 @@ spectr634_interp = func634(wavelengths)
 spectr620 = spectr620_interp
 spectr634 = spectr634_interp
 
+############################################################################################################
 
-del spectr620_interp
-del spectr634_interp
+
+
 
 
 
@@ -191,6 +199,7 @@ for f in folders :
         
                     # Remove the no light spectrum
                     spectrum = sp_laser_smth - sp_nolight_smth
+                    np.save(path + '/B' + str(num_biopsy) + '_' +  type_reco + '_spectrum.npy', spectrum)
         
         
                     # FIT THE SPECTRUM TO REFERENCE SPECTRA
