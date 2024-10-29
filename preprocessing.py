@@ -26,7 +26,7 @@ list_biops = np.arange(1,10,1, dtype=int) # biospies from 1 to 9
 
 
 root_0 = 'D:/hspc/data/2024/' # @todo : temporary, remove
-root = 'D:/hspc/data/2024a/'
+root = 'D:/hspc/data/2024b/'
 
 
 
@@ -95,8 +95,8 @@ spectr634_interp = func634(wavelengths)
 
 
 # save in root : 
-np.save(root + '_spectr620_interp.npy', spectr620_interp)
-np.save(root + '_spectr634_interp.npy', spectr634_interp)
+np.save(folder_path_ref + '_spectr620_interp.npy', spectr620_interp)
+np.save(folder_path_ref + '_spectr634_interp.npy', spectr634_interp)
 
 
 
@@ -144,7 +144,7 @@ for f in folders :
         cubeobj = np.load(file_cube_white)
         cubehyper = cubeobj['arr_0']
         
-        threshold = threshold_ *t_i*1e-3/(np.shape(cubehyper)[0]*np.shape(cubehyper)[1]/16**2)  # absolute threshold 
+        threshold = threshold_ *t_i*1e-3/(np.shape(cubehyper)[0]*np.shape(cubehyper)[1]/(16**2))  # absolute threshold 
         
         
         greyscale_img = np.sum(cubehyper, axis=2)

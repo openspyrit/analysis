@@ -22,9 +22,13 @@ import time
 
 #%% Parameters
 
+save_fit_data = True
+# 'plt.savefig(save_fig_path + 'name.png', bbox_inches='tight')'
+save_results_root = 'D:/hspc/fitresults/'
 
-root = 'D:/hspc/data/2024a/' # @todo : temporary, change
+root = 'D:/hspc/data/2024b/' # @todo : temporary, change
 folders = os.listdir(root)
+print(folders)
 
  
 list_biops = np.arange(1,10,1, dtype=int) # biospies from 1 to 9
@@ -35,23 +39,21 @@ type_reco_npz = type_reco + '.npz'
 real_spectro_reso = 2 # real resolution of the spectrometer (nm)
 
 
-# Save figures ?
-save_fit_data = True
-# 'plt.savefig(save_fig_path + 'name.png', bbox_inches='tight')'
 
 # metadata file to get the wavelengths array :
 file_metadata = 'D:/hspc/data/2024/P60/obj_biopsy-1_anterior-portion_source_Laser_405nm_1.2W_A_0.15_f80mm-P2_Walsh_im_16x16_ti_200ms_zoom_x1/obj_biopsy-1_anterior-portion_source_Laser_405nm_1.2W_A_0.15_f80mm-P2_Walsh_im_16x16_ti_200ms_zoom_x1_metadata.json'
 metadata, acquisition_params, spectrometer_params, dmd_params = read_metadata(file_metadata)
 wavelengths = acquisition_params.wavelengths
 
+folder_path_ref = 'C:/Users/chiliaeva/Documents/data_pilot-warehouse/ref/'
 
 
+ #%% import ref spectra
 
- #%% REFERENCE SPECTRA # this part has been moved outside of the loop
 
 # load interpolated and normalized ref spectra : 
-spectr620 = np.load(root + '_spectr620_interp.npy')
-spectr634 = np.load(root + '_spectr634_interp.npy')
+spectr620 = np.load(folder_path_ref + '_spectr620_interp.npy')
+spectr634 = np.load(folder_path_ref + '_spectr634_interp.npy')
 
 
 # Define fit function
@@ -69,9 +71,13 @@ def func_fit(x, a1, a2, a3, shift620, shift634, lambd_c, sigma):
 
 
 for f in folders : 
+    print("enter folders loop")
     path = os.path.join(root, f)
     print("numero patient : ", f)
+    os.mkdir(save_results_root + f)
+    print("patient folder created")
     subdirs = os.listdir(path)
+    print("subdirs", subdirs)
     for num_biopsy in list_biops : 
         print('numero biopsie : ', num_biopsy)
         for s in subdirs :
@@ -158,11 +164,11 @@ for f in folders :
                     popt_tab[x_i, y_i, :] = np.nan
                     
         print('end fit for image', time.time()-t0)  
-        np.save(path + '/B' + str(num_biopsy) + '_' +  type_reco + '_spectrum_tab.npy', spectrum_tab)     
+        np.save(save_results_root + f + '/B' + str(num_biopsy) + '_' +  type_reco + '_spectrum_tab.npy', spectrum_tab)     
   
    
         if save_fit_data == True:
-            np.save(path + '/B' + str(num_biopsy) + '_' +  type_reco + '_fit_params.npy', popt_tab) 
+            np.save(save_results_root + f + '/B' + str(num_biopsy) + '_' +  type_reco + '_fit_params.npy', popt_tab) 
     
     
     
