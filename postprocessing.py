@@ -17,10 +17,10 @@ Output :
 import numpy as np
 import matplotlib.pyplot as plt
 from spas.metadata2 import read_metadata
-from main_fit import func_fit
+from preprocessing import func_fit
 
 
-savefig = False
+savefig = True
 
 
 # Get fit data
@@ -75,8 +75,8 @@ if savefig == True :
 
 #%% Spectrum, fit and residuals
 
-x_i = 9
-y_i = 12
+x_i = 10
+y_i = 20
 
 
 spectrum_tab = np.load(root + num_patient + '/' + num_biopsy + '_' + type_reco + '_spectrum_tab.npy')   # spectrum from data
@@ -86,7 +86,7 @@ spectrum_fit = func_fit(wavelengths, *params_tab[x_i, y_i, :])
 
 
 
-fig, (ax1, ax2) = plt.subplots(1, 2)
+fig, (ax1, ax2) = plt.subplots(2, 1,  sharex=True
 ax1.plot(wavelengths, spectrum,  label='spectrum')
 ax1.plot(wavelengths, spectrum_fit, label='fit')
 ax1.set_xlabel('wavelength (nm)')

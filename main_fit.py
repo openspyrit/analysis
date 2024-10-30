@@ -13,7 +13,7 @@ from spas.metadata2 import read_metadata
 import scipy.signal as sg
 import scipy.optimize as op
 from scipy import interpolate
-from preprocessing import func620, func634
+from preprocessing import func620, func634, func_fit
 
 
 import os
@@ -60,9 +60,12 @@ spectr620_shift = spectr620
 spectr634_shift = spectr634
 
 
+
+# @todo : temporary
+'''
 def func_fit(x, a1, a2, a3, shift620, shift634, lambd_c, sigma):
     return a1*func620(x-shift620) + a2*func634(x-shift634) + a3*np.exp(-(lambd_c-x)**2/sigma**2)
-
+'''
 
 
 #%% Select the files

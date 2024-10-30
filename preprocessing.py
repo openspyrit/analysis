@@ -100,6 +100,11 @@ np.save(folder_path_ref + '_spectr634_interp.npy', spectr634_interp)
 
 
 
+#%% Define fit function
+def func_fit(x, a1, a2, a3, shift620, shift634, lambd_c, sigma):
+    return a1*func620(x-shift620) + a2*func634(x-shift634) + a3*np.exp(-(lambd_c-x)**2/sigma**2)
+
+
 
 #%% MASKS 
 
@@ -152,9 +157,6 @@ for f in folders :
         mask = cv.threshold(greyscale_img, threshold, 1, cv.THRESH_BINARY) # thresholding function
 
         np.save(subpath +  type_reco + '_mask.npy', mask[1])
-
-
-
 
 
 
