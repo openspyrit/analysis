@@ -20,12 +20,12 @@ from spas.metadata2 import read_metadata
 from preprocessing import func_fit
 
 
-savefig = True
+savefig = False
 
 
 # Get fit data
 root = 'D:/hspc/fitresults/'
-num_patient = 'P69'
+num_patient = 'P68'
 num_biopsy = 'B1'
 type_reco = 'had_reco'
 
@@ -41,11 +41,8 @@ min_ppix = np.amin([np.nanmin(coef_P620), np.nanmin(coef_P634)]) # minimum for P
 max_ppix = np.amax([np.nanmax(coef_P620), np.nanmax(coef_P634)])
 
 
-# metadata file to get the wavelengths array :
-file_metadata = 'D:/hspc/data/2024/P60/obj_biopsy-1_anterior-portion_source_Laser_405nm_1.2W_A_0.15_f80mm-P2_Walsh_im_16x16_ti_200ms_zoom_x1/obj_biopsy-1_anterior-portion_source_Laser_405nm_1.2W_A_0.15_f80mm-P2_Walsh_im_16x16_ti_200ms_zoom_x1_metadata.json'
-metadata, acquisition_params, spectrometer_params, dmd_params = read_metadata(file_metadata)
-wavelengths = acquisition_params.wavelengths
-
+# import wavelengths 
+wavelengths = np.load(root + "wavelengths_mask_606-616.npy")
 
 
 #%% Abundance maps
@@ -75,22 +72,21 @@ if savefig == True :
 
 #%% Spectrum, fit and residuals
 
-x_i = 10
-y_i = 20
+x = 17
+y = 9
 
 
 spectrum_tab = np.load(root + num_patient + '/' + num_biopsy + '_' + type_reco + '_spectrum_tab.npy')   # spectrum from data
-spectrum = spectrum_tab[x_i, y_i, :]
+spectrum = spectrum_tab[x, y, :]
 
-spectrum_fit = func_fit(wavelengths, *params_tab[x_i, y_i, :])
+spectrum_fit = func_fit(wavelengths, *params_tab[x, y, :])
 
 
-
-fig, (ax1, ax2) = plt.subplots(2, 1,  sharex=True
-ax1.plot(wavelengths, spectrum,  label='spectrum')
-ax1.plot(wavelengths, spectrum_fit, label='fit')
+fig, (ax1, ax2) = plt.subplots(2, 1,  sharex=True)
+ax1.plot(wavelengths, spectrum,  label='spectrum', linewidth=1)
+ax1.plot(wavelengths, spectrum_fit, label='fit', color='orange')
 ax1.set_xlabel('wavelength (nm)')
-ax2.plot(wavelengths, spectrum-spectrum_fit, label='residuals')
+ax2.plot(wavelengths, spectrum-spectrum_fit, label='residuals', color='magenta', linewidth=1)
 ax2.set_xlabel('wavelength (nm)')
 fig.legend()
 

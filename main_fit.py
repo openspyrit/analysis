@@ -22,11 +22,15 @@ import time
 
 #%% Parameters
 
+
+reject_band = [606, 616] # exclude spectral band reject_band from fit (nm). To reject no band, set reject_band[0]=reject_band[1]
+
+
 save_fit_data = True
 # 'plt.savefig(save_fig_path + 'name.png', bbox_inches='tight')'
 save_results_root = 'D:/hspc/fitresults/'
 
-root = 'D:/2024c/' # @todo : temporary, change
+root = 'D:/2024b/' # @todo : temporary, change
 folders = os.listdir(root)
 print(folders)
 
@@ -43,6 +47,13 @@ file_metadata = 'D:/hspc/data/2024/P60/obj_biopsy-1_anterior-portion_source_Lase
 metadata, acquisition_params, spectrometer_params, dmd_params = read_metadata(file_metadata)
 wavelengths = acquisition_params.wavelengths
 
+
+band_stop_mask = (wavelengths <= reject_band[0])|(wavelengths >= reject_band[1])
+wavelengths = wavelengths[band_stop_mask]
+if save_fit_data == True : 
+    np.save(save_results_root + 'wavelengths_mask_' + str(reject_band[0]) + '-' + str(reject_band[1]) + '.npy', wavelengths) 
+
+
 folder_path_ref = 'C:/Users/chiliaeva/Documents/data_pilot-warehouse/ref/'
 
 
@@ -53,19 +64,9 @@ folder_path_ref = 'C:/Users/chiliaeva/Documents/data_pilot-warehouse/ref/'
 spectr620 = np.load(folder_path_ref + '_spectr620_interp.npy')
 spectr634 = np.load(folder_path_ref + '_spectr634_interp.npy')
 
+spectr620 = spectr620[band_stop_mask]
+spectr634 = spectr634[band_stop_mask]
 
-# Define fit function
-
-spectr620_shift = spectr620
-spectr634_shift = spectr634
-
-
-
-# @todo : temporary
-'''
-def func_fit(x, a1, a2, a3, shift620, shift634, lambd_c, sigma):
-    return a1*func620(x-shift620) + a2*func634(x-shift634) + a3*np.exp(-(lambd_c-x)**2/sigma**2)
-'''
 
 
 #%% Select the files
@@ -150,9 +151,10 @@ for f in folders :
                             sp_nolight_smth = sg.medfilt(spectr_nolight, kernel_size)
                         
                         
-                
                             # Remove the no light spectrum
                             spectrum = sp_laser_smth - sp_nolight_smth
+                            spectrum = spectrum[band_stop_mask]
+                            
                             spectrum_tab[x_i, y_i, :] = spectrum
                 
                 
