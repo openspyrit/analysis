@@ -26,7 +26,7 @@ save_fit_data = True
 # 'plt.savefig(save_fig_path + 'name.png', bbox_inches='tight')'
 save_results_root = 'D:/hspc/fitresults/'
 
-root = 'D:/hspc/data/2024b/' # @todo : temporary, change
+root = 'D:/2024c/' # @todo : temporary, change
 folders = os.listdir(root)
 print(folders)
 

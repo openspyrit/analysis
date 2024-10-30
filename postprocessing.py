@@ -24,8 +24,8 @@ savefig = False
 
 
 # Get fit data
-root = 'D:/hspc/data/2024a/'
-num_patient = 'P64'
+root = 'D:/hspc/fitresults/'
+num_patient = 'P69'
 num_biopsy = 'B1'
 type_reco = 'had_reco'
 
