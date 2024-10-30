@@ -86,7 +86,8 @@ for f in folders :
     for s in subdirs : 
         print("enter subdirs loop")
         print("current subdir : ", s)
-        if s[11] == str(cpt) :
+        nb = '-' + str(cpt) # @todo : changed from previous version to get biopsies of num > 9, check if it works
+        if nb in s :
             print("enter if loop with cpt = :", cpt)
             subpath = path + '/' + s + '/'
             if "Laser" in s :
