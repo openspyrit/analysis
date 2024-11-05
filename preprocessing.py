@@ -4,6 +4,7 @@ Created on Fri Oct 18 14:23:22 2024
 
 @author: chiliaeva
 
+
 Use a thresholding method do determine the binary mask for each measurement.
 1 = biopsy in this pixel
 0 = no biopsy here
@@ -15,45 +16,63 @@ IMPORTANT : use the White Light measurements
 import os 
 
 import numpy as np
-import matplotlib.pyplot as plt 
 import cv2 as cv
 from scipy import interpolate
 
 from spas.metadata2 import read_metadata
 
+#%%
+
+threshold_ = 4e5 # nb counts/pixel on background for t_i = 1s, for a 16x16 image # threshold for binary masks
+
+
+type_reco = 'had_reco'     # 'had_reco' or 'nn_reco'
+type_reco_npz = type_reco + '.npz'
+
  
-list_biops = np.arange(1,10,1, dtype=int) # biospies from 1 to 9
+
+root = 'D:/'
+root_data = root + '2024b/'
+folders = os.listdir(root_data)
 
 
-root_0 = 'D:/hspc/data/2024/' # @todo : temporary, remove
-root = 'D:/hspc/data/2024b/'
+root_ref = root + 'ref/'
 
+file_metadata = 'D:/hspc/data/2024/P60/obj_biopsy-1_anterior-portion_source_white_LED_f80mm-P2_Walsh_im_16x16_ti_10ms_zoom_x1/obj_biopsy-1_anterior-portion_source_white_LED_f80mm-P2_Walsh_im_16x16_ti_10ms_zoom_x1_metadata.json'
 
-
-#%% REFERENCE SPECTRA
-##########################################################################################
-
-file_metadata = root_0 + 'P60/obj_biopsy-1_anterior-portion_source_white_LED_f80mm-P2_Walsh_im_16x16_ti_10ms_zoom_x1/obj_biopsy-1_anterior-portion_source_white_LED_f80mm-P2_Walsh_im_16x16_ti_10ms_zoom_x1_metadata.json'
 
 metadata, acquisition_params, spectrometer_params, dmd_params = read_metadata(file_metadata)
 wavelengths = acquisition_params.wavelengths
+t_i = spectrometer_params.integration_time_ms
+
+
+
+#%% DEFINE FIT FUNCTION
+
+
+def func_fit(x, a1, a2, a3, shift620, shift634, lambd_c, sigma):
+    return a1*func620(x-shift620) + a2*func634(x-shift634) + a3*np.exp(-(lambd_c-x)**2/sigma**2)
+
+
     
-folder_path_ref = 'C:/Users/chiliaeva/Documents/data_pilot-warehouse/ref/'
- 
+#%% REFERENCE SPECTRA
+
+
 file_name_ppix620 = 'ref620_3lamda.npy'
 file_name_ppix634 = 'ref634_3lamda.npy'
 file_name_lambda = 'Lambda.npy'
  
- 
-ppix620 = np.load(folder_path_ref + file_name_ppix620)
-ppix634 = np.load(folder_path_ref + file_name_ppix634)
-lambd = np.load(folder_path_ref + file_name_lambda)
+
+ppix620 = np.load(root_ref + file_name_ppix620)
+ppix634 = np.load(root_ref + file_name_ppix634)
+lambd = np.load(root_ref + file_name_lambda)
  
  
 spectr634 = ppix634[0, :] 
 spectr634[0] = 0 # otherwise kernel dies
 spectr620 = ppix620[0, :]
 spectr620[0] = 0
+
  
  
  # Normalize the reference spectra
@@ -94,56 +113,27 @@ spectr620_interp = func620(wavelengths) # import wavelengths from metadata
 spectr634_interp = func634(wavelengths)
 
 
-# save in root : 
-np.save(folder_path_ref + '_spectr620_interp.npy', spectr620_interp)
-np.save(folder_path_ref + '_spectr634_interp.npy', spectr634_interp)
+# save in ref folder : 
+np.save(root_ref + '_spectr620_interp.npy', spectr620_interp)
+np.save(root_ref + '_spectr634_interp.npy', spectr634_interp)
 
-
-
-#%% Define fit function
-def func_fit(x, a1, a2, a3, shift620, shift634, lambd_c, sigma):
-    return a1*func620(x-shift620) + a2*func634(x-shift634) + a3*np.exp(-(lambd_c-x)**2/sigma**2)
 
 
 
 #%% MASKS 
 
-
-
-# find t_i in metadata 
-# t_i = 
-threshold_ = 4e5 # nb counts/pixel on background for t_i = 1s, for a 16x16 image
-
-
-type_reco = 'had_reco'
-type_reco_npz = type_reco + '.npz'
-
-
-folders = os.listdir(root)
-
-         
-
-# Read integration time
-
-t_i = spectrometer_params.integration_time_ms
- 
-
-
 for f in folders : 
-    path = os.path.join(root, f)
-    print("numero patient : ", f)
+    path = os.path.join(root_data, f)
     subdirs = os.listdir(path)
-    for num_biopsy in list_biops : 
-        print('numero biopsie : ', num_biopsy)
-        for s in subdirs :
-            if s[11] == str(num_biopsy) :
-                subpath = path + '/' + s + '/'
-                # print('current subdir : ', subpath)
-                if "white" in s : 
-                    file_cube_white = subpath + s + '_' + type_reco_npz
-         
-         
-                 
+    cpt = 1
+    for s in subdirs : 
+        nb = '-' + str(cpt) 
+        if nb in s :
+            subpath = path + '/' + s + '/'
+            if "white" in s :
+                file_cube_white = subpath + s + '_' + type_reco_npz
+
+
         
         # Read hypercube laser
         cubeobj = np.load(file_cube_white)

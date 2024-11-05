@@ -14,25 +14,43 @@ Output :
 
 """
 
+
 import numpy as np
 import matplotlib.pyplot as plt
-from spas.metadata2 import read_metadata
 from preprocessing import func_fit
 
+#%%
 
 savefig = False
 
 
 # Get fit data
-root = 'D:/hspc/fitresults/'
+root = 'D:/'
+
+
+root_saveresults = root + 'fitresults/'
+
+# import wavelengths 
+wavelengths = np.load(root_saveresults + "wavelengths_mask_606-616.npy")
+
+
 num_patient = 'P68'
 num_biopsy = 'B1'
 type_reco = 'had_reco'
 
 
-file_params = root + num_patient + '/' + num_biopsy + '_' + type_reco + '_fit_params.npy'
-params_tab = np.load(file_params)
+# Position of the spectrum to plot :
+x = 17
+y = 9
 
+
+
+#%% Abundance maps
+
+
+file_params = root_saveresults + num_patient + '/' + num_biopsy + '_' + type_reco + '_fit_params.npy'
+
+params_tab = np.load(file_params)
 coef_P620 = np.load(file_params)[:,:,0]
 coef_P634 = np.load(file_params)[:,:,1]
 coef_lipo = np.load(file_params)[:,:,2]
@@ -40,12 +58,6 @@ coef_lipo = np.load(file_params)[:,:,2]
 min_ppix = np.amin([np.nanmin(coef_P620), np.nanmin(coef_P634)]) # minimum for Protoporphyrin IX colormap
 max_ppix = np.amax([np.nanmax(coef_P620), np.nanmax(coef_P634)])
 
-
-# import wavelengths 
-wavelengths = np.load(root + "wavelengths_mask_606-616.npy")
-
-
-#%% Abundance maps
 
 
 plt.figure('coef_P620_a1_map')
@@ -71,10 +83,6 @@ if savefig == True :
 
 
 #%% Spectrum, fit and residuals
-
-x = 17
-y = 9
-
 
 spectrum_tab = np.load(root + num_patient + '/' + num_biopsy + '_' + type_reco + '_spectrum_tab.npy')   # spectrum from data
 spectrum = spectrum_tab[x, y, :]
