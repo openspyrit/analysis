@@ -17,11 +17,13 @@ Output :
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.axes as axs
 from preprocessing import func_fit
 
 #%%
 
 savefig = False
+show_spectrum_pos = True 
 
 
 # Get fit data
@@ -34,14 +36,14 @@ root_saveresults = root + 'fitresults/'
 wavelengths = np.load(root_saveresults + "wavelengths_mask_606-616.npy")
 
 
-num_patient = 'P68'
+num_patient = 'P60'
 num_biopsy = 'B1'
 type_reco = 'had_reco'
 
 
 # Position of the spectrum to plot :
-x = 17
-y = 9
+x = 10
+y = 8
 
 
 
@@ -65,6 +67,8 @@ plt.clf()
 plt.imshow(coef_P620)
 plt.clim(min_ppix, max_ppix)
 plt.colorbar()
+if show_spectrum_pos == True :
+    plt.plot(x,y, "or", markersize = 8)
 if savefig == True :
     plt.savefig(root + num_patient + '/' + num_biopsy + '_' + type_reco + '_coef_P620_map.png', bbox_inches='tight')
 
@@ -76,6 +80,8 @@ plt.clf()
 plt.imshow(coef_P634)
 plt.clim(min_ppix, max_ppix)
 plt.colorbar()
+if show_spectrum_pos == True :
+    plt.plot(x,y, "or", markersize = 8)
 if savefig == True :
     plt.savefig(root + num_patient + '/' + num_biopsy + '_' + type_reco +'_coef_P634_map.png', bbox_inches='tight')
     
@@ -84,20 +90,24 @@ if savefig == True :
 
 #%% Spectrum, fit and residuals
 
-spectrum_tab = np.load(root + num_patient + '/' + num_biopsy + '_' + type_reco + '_spectrum_tab.npy')   # spectrum from data
+
+
+spectrum_tab = np.load(root_saveresults + num_patient + '/' + num_biopsy + '_' + type_reco + '_spectrum_tab.npy')   # spectrum from data
 spectrum = spectrum_tab[x, y, :]
 
 spectrum_fit = func_fit(wavelengths, *params_tab[x, y, :])
 
 
-fig, (ax1, ax2) = plt.subplots(2, 1,  sharex=True)
+fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+fig.suptitle('Spectrum at position x=' + str(x) + ' y=' + str(y))
 ax1.plot(wavelengths, spectrum,  label='spectrum', linewidth=1)
 ax1.plot(wavelengths, spectrum_fit, label='fit', color='orange')
 ax1.set_xlabel('wavelength (nm)')
 ax2.plot(wavelengths, spectrum-spectrum_fit, label='residuals', color='magenta', linewidth=1)
 ax2.set_xlabel('wavelength (nm)')
 fig.legend()
-
+if savefig == True :
+    fig.savefig(root + num_patient + '/' + num_biopsy + '_' + type_reco + '_x-' + str(x) + '_y-' + str(y) + 'spectrum.png', bbox_inches='tight')
 
 
 
