@@ -26,7 +26,7 @@ import time
 root = 'D:/'
 
 
-root_data = root + '2024b/'
+root_data = root + 'data/'
 root_ref = root + 'ref/'
 root_saveresults = root + 'fitresults/'
 
@@ -35,7 +35,7 @@ print("folders", folders)
 
 
 # metadata file to get the wavelengths array :
-file_metadata = 'D:/hspc/data/2024/P60/obj_biopsy-1_anterior-portion_source_Laser_405nm_1.2W_A_0.15_f80mm-P2_Walsh_im_16x16_ti_200ms_zoom_x1/obj_biopsy-1_anterior-portion_source_Laser_405nm_1.2W_A_0.15_f80mm-P2_Walsh_im_16x16_ti_200ms_zoom_x1_metadata.json'
+file_metadata = 'D:/obj_biopsy-1_anterior-portion_source_Laser_405nm_1.2W_A_0.15_f80mm-P2_Walsh_im_16x16_ti_200ms_zoom_x1_metadata.json'
 metadata, acquisition_params, spectrometer_params, dmd_params = read_metadata(file_metadata)
 wavelengths = acquisition_params.wavelengths
 

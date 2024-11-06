@@ -32,18 +32,18 @@ type_reco_npz = type_reco + '.npz'
  
 
 root = 'D:/'
-root_data = root + '2024b/'
+root_data = root + 'data/'
 folders = os.listdir(root_data)
 
 
 root_ref = root + 'ref/'
 
-file_metadata = 'D:/hspc/data/2024/P60/obj_biopsy-1_anterior-portion_source_white_LED_f80mm-P2_Walsh_im_16x16_ti_10ms_zoom_x1/obj_biopsy-1_anterior-portion_source_white_LED_f80mm-P2_Walsh_im_16x16_ti_10ms_zoom_x1_metadata.json'
+file_metadata_0 = 'D:/obj_biopsy-1_anterior-portion_source_Laser_405nm_1.2W_A_0.15_f80mm-P2_Walsh_im_16x16_ti_200ms_zoom_x1_metadata.json'
 
 
-metadata, acquisition_params, spectrometer_params, dmd_params = read_metadata(file_metadata)
+metadata, acquisition_params, spectrometer_params, dmd_params = read_metadata(file_metadata_0)
 wavelengths = acquisition_params.wavelengths
-t_i = spectrometer_params.integration_time_ms
+
 
 
 
@@ -132,24 +132,26 @@ for f in folders :
             subpath = path + '/' + s + '/'
             if "white" in s :
                 file_cube_white = subpath + s + '_' + type_reco_npz
-
-
+                file_metadata = subpath + s + '_metadata.json' 
+                
+                metadata, acquisition_params, spectrometer_params, dmd_params = read_metadata(file_metadata)
+                t_i = spectrometer_params.integration_time_ms
         
-        # Read hypercube laser
-        cubeobj = np.load(file_cube_white)
-        cubehyper = cubeobj['arr_0']
+                # Read hypercube laser
+                cubeobj = np.load(file_cube_white)
+                cubehyper = cubeobj['arr_0']
+                
+                threshold = threshold_ *t_i*1e-3/(np.shape(cubehyper)[0]*np.shape(cubehyper)[1]/(16**2))  # absolute threshold 
+                
+                
+                greyscale_img = np.sum(cubehyper, axis=2)
+                
+                mask = cv.threshold(greyscale_img, threshold, 1, cv.THRESH_BINARY) # thresholding function
         
-        threshold = threshold_ *t_i*1e-3/(np.shape(cubehyper)[0]*np.shape(cubehyper)[1]/(16**2))  # absolute threshold 
+                np.save(subpath +  type_reco + '_mask.npy', mask[1])
         
         
-        greyscale_img = np.sum(cubehyper, axis=2)
-        
-        mask = cv.threshold(greyscale_img, threshold, 1, cv.THRESH_BINARY) # thresholding function
-
-        np.save(subpath +  type_reco + '_mask.npy', mask[1])
-
-
-
+                cpt+=1
 
 
 
