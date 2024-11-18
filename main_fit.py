@@ -26,7 +26,7 @@ import time
 root = 'D:/'
 
 
-root_data = root + 'data/'
+root_data = root + 'data_0/'
 root_ref = root + 'ref/'
 root_saveresults = root + 'fitresults/'
 
@@ -85,109 +85,110 @@ spectr634 = spectr634[band_stop_mask]
 
 #%% Select the files
 
+
+list_biopsies = []
+
+
 for f in folders : 
     path = os.path.join(root_data, f)
-    print("numero patient : ", f)
-    os.mkdir(root_saveresults + f + type_reco)
-    print("patient folder created")
+    os.mkdir(root_saveresults + f + '_' + type_reco)
     subdirs = os.listdir(path)
-    
-    cpt = 1
     for s in subdirs : 
-        print("current subdir : ", s)
-        nb = '-' + str(cpt) # @todo : changed from previous version to get biopsies of num > 9, check if it works
-        if nb in s :
-            print("enter if loop with cpt = :", cpt)
-            subpath = path + '/' + s + '/'
-            if "Laser" in s :
-                file_cube_laser = subpath + s + '_' + type_reco_npz
-                print("file_cube_laser = ", file_cube_laser)
-            elif "No-light" in s :
-                file_cube_nolight = subpath + s + '_' + type_reco_npz
-                print("file_cube_nolight = ", file_cube_nolight)
-            elif "white" in s : 
-                file_mask = subpath + type_reco + '_mask.npy'
-                print("file_mask = ", file_mask)
-        
-    
-
-                print("start reading hypercube")
-                # Read laser hypercube
-                cubeobj = np.load(file_cube_laser)
-                cubehyper_laser = cubeobj['arr_0']
-                
-                
-                # Read nolight hypercube 
-                cubeobj = np.load(file_cube_nolight)
-                cubehyper_nolight = cubeobj['arr_0']
-                del cubeobj
-                
-                # Read mask 
-                mask = np.load(file_mask)
-                
-                
-                # @todo : define an array of shape (cube[0], cube[1], nb of param of func_fit)
-                popt_tab = np.ndarray((cubehyper_laser.shape[0], cubehyper_laser.shape[1], 7), dtype = 'float64')
-                popt_tab[:] = np.nan       
-                spectrum_tab = np.ndarray((cubehyper_laser.shape[0], cubehyper_laser.shape[1], np.size(wavelengths)), dtype='float64')
-                spectrum_tab[:] = np.nan   
-                 
-                # Fit for every point of the mask
-                t0 = time.time()
-                print('start fit for the entire image', time.time()-t0)
-                
-                
-                for x_i in range(cubehyper_laser.shape[0]):
-                    for y_i in range(cubehyper_laser.shape[1]):
-                        
-                        if mask[x_i, y_i]!=0:
-                            
-                        
-                            spectr_laser = cubehyper_laser[x_i, y_i, :]
-                            spectr_nolight = cubehyper_nolight[x_i, y_i, :]
-                        
-                
-                            # median filter to smoothen the spectrum
-                        
-                            sp_laser_smth = sg.medfilt(spectr_laser, kernel_size)
-                            sp_nolight_smth = sg.medfilt(spectr_nolight, kernel_size)
-                        
-                        
-                            # Remove the no light spectrum
-                            spectrum = sp_laser_smth - sp_nolight_smth
-                            spectrum = spectrum[band_stop_mask]
-                            
-                            spectrum_tab[x_i, y_i, :] = spectrum
-                
-                
-                
-                            # FIT THE SPECTRUM TO REFERENCE SPECTRA
-                            
-                            M = np.abs(np.max(spectrum))
-                            p0 = [M/2, M/2, M/8, 0, 0, 585, 10]# initial guess for the fit
-                            bounds_inf = [0, 0 ,0 ,-2, -2, 580, 5] 
-                            bounds_sup = [M, M, M, 2, 2, 610, 100] 
-                            
-                            try : 
-                                popt, pcov = op.curve_fit(func_fit, wavelengths, spectrum, p0, bounds=(bounds_inf, bounds_sup))
-                                popt_tab[x_i, y_i, :] = popt
-                            except RuntimeError:
-                                pass
-                        
-                        
-                        
-                print('end fit for image', time.time()-t0)  
-                
+        nb = int(s[11])
+        if nb not in list_biopsies :
+            list_biopsies.append(nb)
+          
+    print("list of biopsies in", f, ":", list_biopsies)
+    for num_biopsy in list_biopsies : 
+        print('numero biopsie : ', num_biopsy)
+        for s in subdirs :
+            if s[11] == str(num_biopsy) :
+                subpath = path + '/' + s + '/'
+                if "Laser" in s : 
+                    file_cube_laser = subpath + s + '_' + type_reco_npz
+                elif "No-light" in s :
+                    file_cube_nolight = subpath + s + '_' + type_reco_npz
+                elif "white" in s : 
+                    file_mask = subpath + type_reco + '_mask.npy'
+                       
+                    
+        print("start reading hypercube")            
+        # Read laser hypercube
+        cubeobj = np.load(file_cube_laser)
+        cubehyper_laser = cubeobj['arr_0']
        
-                if save_fit_data == True:
-                    np.save(root_saveresults + f + type_reco + '/B' + str(cpt) + '_' +  type_reco + '_spectrum_tab.npy', spectrum_tab) 
-                    np.save(root_saveresults + f + type_reco + '/B' + str(cpt) + '_' +  type_reco + '_fit_params.npy', popt_tab) 
+        
+   
+        # Read nolight hypercube 
+        cubeobj = np.load(file_cube_nolight)
+        cubehyper_nolight = cubeobj['arr_0']
+        del cubeobj
+        
+        # Read mask 
+        mask = np.load(file_mask)
         
         
-                cpt += 1
-                print("cpt incremented to : ", cpt)
-    
-    
+        # @todo : define an array of shape (cube[0], cube[1], nb of param of func_fit)
+        popt_tab = np.ndarray((cubehyper_laser.shape[0], cubehyper_laser.shape[1], 7), dtype = 'float64')
+        popt_tab[:] = np.nan       
+        spectrum_tab = np.ndarray((cubehyper_laser.shape[0], cubehyper_laser.shape[1], np.size(wavelengths)), dtype='float64')
+        spectrum_tab[:] = np.nan   
+         
+        # Fit for every point of the mask
+        t0 = time.time()
+        print('start fit for the entire image', time.time()-t0)
+        
+        
+        for x_i in range(cubehyper_laser.shape[0]):
+            for y_i in range(cubehyper_laser.shape[1]):
+                
+                if mask[x_i, y_i]!=0:
+                    
+                
+                    spectr_laser = cubehyper_laser[x_i, y_i, :]
+                    spectr_nolight = cubehyper_nolight[x_i, y_i, :]
+                
+        
+                    # median filter to smoothen the spectrum
+                
+                    sp_laser_smth = sg.medfilt(spectr_laser, kernel_size)
+                    sp_nolight_smth = sg.medfilt(spectr_nolight, kernel_size)
+                
+                
+                    # Remove the no light spectrum
+                    spectrum = sp_laser_smth - sp_nolight_smth
+                    spectrum = spectrum[band_stop_mask]
+                    
+                    spectrum_tab[x_i, y_i, :] = spectrum
+        
+        
+        
+                    # FIT THE SPECTRUM TO REFERENCE SPECTRA
+                    
+                    M = np.abs(np.max(spectrum))
+                    p0 = [M/2, M/2, M/8, 0, 0, 585, 10]# initial guess for the fit
+                    bounds_inf = [0, 0 ,0 ,-2, -2, 580, 5] 
+                    bounds_sup = [M, M, M, 2, 2, 610, 100] 
+                    
+                    try : 
+                        popt, pcov = op.curve_fit(func_fit, wavelengths, spectrum, p0, bounds=(bounds_inf, bounds_sup))
+                        popt_tab[x_i, y_i, :] = popt
+                    except RuntimeError:
+                        pass
+                
+                
+                
+        print('end fit for image', time.time()-t0)  
+        
+   
+        if save_fit_data == True:
+            np.save(root_saveresults + f + '_' + type_reco + '/B' + str(num_biopsy) + '_' +  type_reco + '_spectrum_tab.npy', spectrum_tab) 
+            np.save(root_saveresults + f + '_' + type_reco + '/B' + str(num_biopsy) + '_' +  type_reco + '_fit_params.npy', popt_tab) 
+
+
+    list_biopsies = []      
+
+
     
     
 

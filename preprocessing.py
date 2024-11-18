@@ -36,7 +36,7 @@ if type_reco == 'nn_reco':
  
 
 root = 'D:/'
-root_data = root + 'data/'
+root_data = root + 'data_0/'
 folders = os.listdir(root_data)
 
 
@@ -126,42 +126,54 @@ np.save(root_ref + '_spectr634_interp.npy', spectr634_interp)
 
 #%% MASKS 
 
+list_biopsies = []
+
 for f in folders : 
     path = os.path.join(root_data, f)
     subdirs = os.listdir(path)
-    cpt = 1
     for s in subdirs : 
-        nb = '-' + str(cpt) 
-        print("biopsy nb", nb)
-        if nb in s :
-            print("nb in s", s)
-            subpath = path + '/' + s + '/'
-            if "white" in s :
-                print("white in s", s)
-                file_cube_white = subpath + s + '_' + type_reco_npz
-                file_metadata = subpath + s + '_metadata.json' 
-                
-                metadata, acquisition_params, spectrometer_params, dmd_params = read_metadata(file_metadata)
-                t_i = spectrometer_params.integration_time_ms
-        
-                # Read hypercube laser
-                cubeobj = np.load(file_cube_white)
-                cubehyper = cubeobj['arr_0']
-                
-                threshold = threshold_ *t_i*1e-3/(np.shape(cubehyper)[0]*np.shape(cubehyper)[1]/(16**2))  # absolute threshold 
-                
-                
-                greyscale_img = np.sum(cubehyper, axis=2)
-                
-                mask = cv.threshold(greyscale_img, threshold, 1, cv.THRESH_BINARY) # thresholding function
-        
-                np.save(subpath +  type_reco + '_mask.npy', mask[1])
-                print("mask saved")
-        
-        
-                cpt+=1
+        nb = int(s[11])
+        if nb not in list_biopsies :
+            list_biopsies.append(nb)
+          
+            
+          
+    print("list of biopsies in", f, ":", list_biopsies)
+    for num_biopsy in list_biopsies : 
+        print('numero biopsie : ', num_biopsy)
+        for s in subdirs :
+            if s[11] == str(num_biopsy) :
+                subpath = path + '/' + s + '/'
+                if "white" in s : 
+                    file_cube_white = subpath + s + '_' + type_reco_npz
+                    file_metadata = subpath + s + '_metadata.json'
+                    
+                    metadata, acquisition_params, spectrometer_params, dmd_params = read_metadata(file_metadata)
+                    t_i = spectrometer_params.integration_time_ms
+            
+                    # Read hypercube laser
+                    cubeobj = np.load(file_cube_white)
+                    cubehyper = cubeobj['arr_0']
+                    
+                    threshold = threshold_ *t_i*1e-3/(np.shape(cubehyper)[0]*np.shape(cubehyper)[1]/(16**2))  # absolute threshold 
+                    
+                    
+                    greyscale_img = np.sum(cubehyper, axis=2)
+                    
+                    mask = cv.threshold(greyscale_img, threshold, 1, cv.THRESH_BINARY) # thresholding function
+            
+                    np.save(subpath +  type_reco + '_mask.npy', mask[1])
+                    print("mask saved")
+            
+    list_biopsies = []
+                    
 
-
+                    
+                    
+                    
+         
+            
+        
 
 
 
