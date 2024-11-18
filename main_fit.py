@@ -45,7 +45,7 @@ wavelengths = acquisition_params.wavelengths
 
 save_fit_data = True
 
-type_reco = 'had_reco'
+type_reco = 'nn_reco'
 type_reco_npz = type_reco + '.npz'
 
 
@@ -88,7 +88,7 @@ spectr634 = spectr634[band_stop_mask]
 for f in folders : 
     path = os.path.join(root_data, f)
     print("numero patient : ", f)
-    os.mkdir(root_saveresults + f)
+    os.mkdir(root_saveresults + f + type_reco)
     print("patient folder created")
     subdirs = os.listdir(path)
     
@@ -180,8 +180,8 @@ for f in folders :
                 
        
                 if save_fit_data == True:
-                    np.save(root_saveresults + f + '/B' + str(cpt) + '_' +  type_reco + '_spectrum_tab.npy', spectrum_tab) 
-                    np.save(root_saveresults + f + '/B' + str(cpt) + '_' +  type_reco + '_fit_params.npy', popt_tab) 
+                    np.save(root_saveresults + f + type_reco + '/B' + str(cpt) + '_' +  type_reco + '_spectrum_tab.npy', spectrum_tab) 
+                    np.save(root_saveresults + f + type_reco + '/B' + str(cpt) + '_' +  type_reco + '_fit_params.npy', popt_tab) 
         
         
                 cpt += 1

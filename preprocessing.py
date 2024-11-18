@@ -21,14 +21,18 @@ from scipy import interpolate
 
 from spas.metadata2 import read_metadata
 
+
+
+
 #%%
 
 threshold_ = 4e5 # nb counts/pixel on background for t_i = 1s, for a 16x16 image # threshold for binary masks
 
 
-type_reco = 'had_reco'     # 'had_reco' or 'nn_reco'
+type_reco = 'nn_reco'     # 'had_reco' or 'nn_reco'
 type_reco_npz = type_reco + '.npz'
-
+if type_reco == 'nn_reco':
+    threshold_ = threshold_/4
  
 
 root = 'D:/'
@@ -128,9 +132,12 @@ for f in folders :
     cpt = 1
     for s in subdirs : 
         nb = '-' + str(cpt) 
+        print("biopsy nb", nb)
         if nb in s :
+            print("nb in s", s)
             subpath = path + '/' + s + '/'
             if "white" in s :
+                print("white in s", s)
                 file_cube_white = subpath + s + '_' + type_reco_npz
                 file_metadata = subpath + s + '_metadata.json' 
                 
@@ -149,6 +156,7 @@ for f in folders :
                 mask = cv.threshold(greyscale_img, threshold, 1, cv.THRESH_BINARY) # thresholding function
         
                 np.save(subpath +  type_reco + '_mask.npy', mask[1])
+                print("mask saved")
         
         
                 cpt+=1
