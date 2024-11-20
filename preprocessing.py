@@ -135,7 +135,14 @@ for f in folders :
         nb = int(s[11])
         if nb not in list_biopsies :
             list_biopsies.append(nb)
-          
+    for s in subdirs :
+        if s[12] != '-' and s[12] != '_' :
+            nb_ = int(s[12])
+            nb = int(s[11])*10 + nb_
+            if nb not in list_biopsies :
+                list_biopsies.append(nb)
+                
+                
             
           
     print("list of biopsies in", f, ":", list_biopsies)
@@ -167,7 +174,7 @@ for f in folders :
                         print("mask saved")
                     else : 
                         print("mask already exists")
-            
+        
     list_biopsies = []
                     
 
