@@ -29,14 +29,14 @@ from spas.metadata2 import read_metadata
 threshold_ = 4e5 # nb counts/pixel on background for t_i = 1s, for a 16x16 image # threshold for binary masks
 
 
-type_reco = 'nn_reco'     # 'had_reco' or 'nn_reco'
+type_reco = 'had_reco'     # 'had_reco' or 'nn_reco'
 type_reco_npz = type_reco + '.npz'
 if type_reco == 'nn_reco':
     threshold_ = threshold_/4
  
 
 root = 'D:/'
-root_data = root + 'data_0/'
+root_data = root + 'd/'
 folders = os.listdir(root_data)
 
 
@@ -161,9 +161,12 @@ for f in folders :
                     greyscale_img = np.sum(cubehyper, axis=2)
                     
                     mask = cv.threshold(greyscale_img, threshold, 1, cv.THRESH_BINARY) # thresholding function
-            
-                    np.save(subpath +  type_reco + '_mask.npy', mask[1])
-                    print("mask saved")
+                    
+                    if os.path.isfile(subpath +  type_reco + '_mask.npy') == False :
+                        np.save(subpath +  type_reco + '_mask.npy', mask[1])
+                        print("mask saved")
+                    else : 
+                        print("mask already exists")
             
     list_biopsies = []
                     

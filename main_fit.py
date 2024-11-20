@@ -26,8 +26,10 @@ import time
 root = 'D:/'
 
 
-root_data = root + 'data_0/'
+root_data = root + 'd/'
 root_ref = root + 'ref/'
+
+# os.mkdir(root + 'fitresults_' + )
 root_saveresults = root + 'fitresults/'
 
 folders = os.listdir(root_data)

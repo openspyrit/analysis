@@ -15,6 +15,7 @@ Output :
 """
 
 
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.axes as axs
@@ -24,16 +25,21 @@ import cv2 as cv
 
 #%%
 
-savefig_maps = True
-savefig_spectrum = True
-show_spectrum_pos = True
+savefig_maps = False
+savefig_spectrum = False
+show_spectrum_pos = False
+
+type_reco = 'nn_reco'
 
 
 # Get fit data
 root = 'D:/'
+root_saveresults = root + 'fitresults_241119/'
 
+root_savefig = root_saveresults + 'fig/'
+if os.path.exists(root_savefig) == False :
+    os.mkdir(root_savefig)
 
-root_saveresults = root + 'fitresults/'
 
 # import wavelengths 
 wavelengths = np.load(root_saveresults + "wavelengths_mask_606-616.npy")
@@ -41,7 +47,7 @@ wavelengths = np.load(root_saveresults + "wavelengths_mask_606-616.npy")
 
 num_patient = 'P63'
 num_biopsy = 'B2'
-type_reco = 'nn_reco'
+
 
 
 # Position of the spectrum to plot :
@@ -131,14 +137,178 @@ if savefig_spectrum == True :
 
 
 
-
 #%% plot spectrum_tab
-
 
 
 plt.figure("Spectrum tab")
 plt.clf
 plt.imshow(spectrum_tab[:,:,1000])
+
+
+
+#%% Save maps for the entire 'fitresults' folder
+
+root_maps = root_savefig + 'maps/'
+if os.path.exists(root_maps) == False :
+    os.mkdir(root_maps)
+
+
+folders = os.listdir(root_saveresults)
+
+
+for folder in folders : 
+    if 'P' in folder :
+        num_patient = folder[0:4]
+        type_reco = folder[4:]
+        path = os.path.join(root_saveresults, folder)
+        files = os.listdir(path)
+        for file in files :
+            if 'fit_params' in file :
+                num_biops = file[0:3]
+                subpath = os.path.join(path, file)
+                coef_P620 = np.load(subpath)[:,:,0]
+                coef_P634 = np.load(subpath)[:,:,1]
+                coef_lipo = np.load(subpath)[:,:,2]
+                shift620 = np.load(subpath)[:,:,3]
+                shift634 = np.load(subpath)[:,:,4]
+                lambd_lipo = np.load(subpath)[:,:,5]
+                sigma_lipo = np.load(subpath)[:,:,6]
+                
+                min_ppix = np.amin([np.nanmin(coef_P620), np.nanmin(coef_P634)]) # minimum for Protoporphyrin IX colormap
+                max_ppix = np.amax([np.nanmax(coef_P620), np.nanmax(coef_P634)])
+        
+                plt.figure()
+                plt.imshow(coef_P620)
+                plt.clim(min_ppix, max_ppix)
+                plt.colorbar()
+                plt.savefig(root_maps + num_patient + num_biops + '_' + type_reco + '_coef_P620_map.png', bbox_inches='tight')
+                plt.close()
+        
+        
+                plt.figure()
+                plt.imshow(coef_P634)
+                plt.clim(min_ppix, max_ppix)
+                plt.colorbar()
+                plt.savefig(root_maps + num_patient + num_biops + '_' + type_reco + '_coef_P634_map.png', bbox_inches='tight')
+                plt.close()
+    
+    
+                plt.figure()
+                plt.imshow(coef_lipo)
+                plt.colorbar()
+                plt.savefig(root_maps + num_patient + num_biops + '_' + type_reco + '_coef_lipo_map.png', bbox_inches='tight')
+                plt.close()
+    
+    
+                plt.figure()
+                plt.imshow(shift620)
+                plt.colorbar()
+                plt.savefig(root_maps + num_patient + num_biops + '_' + type_reco + '_shift620_map.png', bbox_inches='tight')
+                plt.close()
+    
+                plt.figure()
+                plt.imshow(shift634)
+                plt.colorbar()
+                plt.savefig(root_maps + num_patient + num_biops + '_' + type_reco + '_shift634_map.png', bbox_inches='tight')
+                plt.close()
+    
+        
+                plt.figure()
+                plt.imshow(lambd_lipo)
+                plt.colorbar()
+                plt.savefig(root_maps + num_patient + num_biops + '_' + type_reco + '_lambd_lipo_map.png', bbox_inches='tight')
+                plt.close()
+    
+    
+                plt.figure()
+                plt.imshow(sigma_lipo)
+                plt.colorbar()
+                plt.savefig(root_maps + num_patient + num_biops + '_' + type_reco + '_sigma_lipo_map.png', bbox_inches='tight')
+                plt.close()
+
+
+
+
+#%% Save 1 averaged spectrum for each measurement : 
+    
+    
+root_avg_spectra = root_savefig + 'avg_spectra/'
+if os.path.exists(root_avg_spectra) == False :
+    os.mkdir(root_avg_spectra)
+
+
+folders = os.listdir(root_saveresults)
+
+
+for folder in folders : 
+    if 'P' in folder : 
+        num_patient = folder[0:4]
+        type_reco = folder[4:]
+        path = os.path.join(root_saveresults, folder)
+        files = os.listdir(path)
+        for file in files :
+            if 'spectrum_tab' in file :
+                num_biops = file[0:3]
+                subpath = os.path.join(path, file)
+                spectrum_tab = np.load(subpath)
+                avg_spectrum = np.nanmean(spectrum_tab, (0,1))
+                
+                plt.figure()
+                plt.plot(wavelengths, avg_spectrum)
+                plt.savefig(root_avg_spectra + num_patient + num_biops + '_' + type_reco + '_sigma_lipo_map.png', bbox_inches='tight')
+                plt.close()
+
+
+
+
+#%% Save sum of squared residuals 
+
+'''
+root_res = root_savefig + 'sum_sq_residuals/'
+if os.path.exists(root_res) == False :
+    os.mkdir(root_res)
+
+
+
+folders = os.listdir(root_saveresults)
+
+
+
+
+for folder in folders : 
+    if 'P' in folder : 
+        num_patient = folder[0:4]
+        type_reco = folder[4:]
+        path = os.path.join(root_saveresults, folder)
+        files = os.listdir(path)
+        for file in files :
+            if 'spectrum_tab' in file :
+                num_biops = file[0:3]
+                subpath = os.path.join(path, file)
+                spectrum_tab = np.load(subpath)
+                spectrum_fit = func_fit(wavelengths, *params_tab[:, :, :])
+                
+spectrum_fit = func_fit(wavelengths, *params_tab[:, :, :])
+
+'''
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
