@@ -19,6 +19,7 @@ from preprocessing import func_fit
 
 import os
 import time
+import datetime as dt
 
 
 #%% Paths
@@ -30,7 +31,10 @@ root_data = root + 'd/'
 root_ref = root + 'ref/'
 
 # os.mkdir(root + 'fitresults_' + )
-root_saveresults = root + 'fitresults/'
+root_saveresults = root + 'fitresults_241121/'
+if os.path.exists(root_saveresults) == False :
+    os.mkdir(root_saveresults)
+
 
 folders = os.listdir(root_data)
 print("folders", folders)
@@ -52,7 +56,6 @@ type_reco_npz = type_reco + '.npz'
 
 
 
-
 real_spectro_reso = 2 # real resolution of the spectrometer (nm)
 theo_spectro_reso = (wavelengths[-1]-wavelengths[0])/len(wavelengths)
 kernel_size = int(real_spectro_reso/theo_spectro_reso) + 1 # size of the window for the median filter, must be odd
@@ -62,14 +65,32 @@ if kernel_size %2 == 0 :
 
 
 
-reject_band = [606, 616] # exclude spectral band reject_band from fit (nm). To reject no band, set reject_band[0]=reject_band[1]
 
-band_stop_mask = (wavelengths <= reject_band[0])|(wavelengths >= reject_band[1])
-wavelengths = wavelengths[band_stop_mask]
+# Perform the fit only on a part of the spectral domain 
+
+# reject_band = [606, 616] # exclude spectral band reject_band from fit (nm). To reject no band, set reject_band[0]=reject_band[1]
+# band_stop_mask = (wavelengths <= reject_band[0])|(wavelengths >= reject_band[1])
+
+fit_start = 614
+fit_stop = 650
+
+
+band_mask = (wavelengths >= 615) & (wavelengths <= 650)
+wavelengths = wavelengths[band_mask]
 if save_fit_data == True : 
-    np.save(root_saveresults + 'wavelengths_mask_' + str(reject_band[0]) + '-' + str(reject_band[1]) + '.npy', wavelengths) 
+    np.save(root_saveresults + 'wavelengths_mask_' + str(fit_start) + '-' + str(fit_stop) + '.npy', wavelengths) 
 
 
+
+
+# Resampling the wavelength scale for the binned spectrum
+bin_width = 10
+
+wvlgth_bin = np.ndarray(wavelengths.size // bin_width, dtype=float)
+
+for i in range(wavelengths.size):
+    wvlgth_bin[i] = wavelengths[i*bin_width]
+    
 
 
  #%% Import ref spectra
@@ -79,8 +100,8 @@ if save_fit_data == True :
 spectr620 = np.load(root_ref + '_spectr620_interp.npy')
 spectr634 = np.load(root_ref + '_spectr634_interp.npy')
 
-spectr620 = spectr620[band_stop_mask]
-spectr634 = spectr634[band_stop_mask]
+spectr620 = spectr620[band_mask]
+spectr634 = spectr634[band_mask]
 
 
 
@@ -155,20 +176,23 @@ for f in folders :
                 if mask[x_i, y_i]!=0:
                     
                 
-                    spectr_laser = cubehyper_laser[x_i, y_i, :]
-                    spectr_nolight = cubehyper_nolight[x_i, y_i, :]
-                
-        
-                    # median filter to smoothen the spectrum
-                
-                    sp_laser_smth = sg.medfilt(spectr_laser, kernel_size)
-                    sp_nolight_smth = sg.medfilt(spectr_nolight, kernel_size)
+                    spectr_laser = cubehyper_laser[x_i, y_i, :][band_mask]
+                    spectr_nolight = cubehyper_nolight[x_i, y_i, :][band_mask]
+                    
+                    
+                    
+                    # Binning
+                    sp_laser_bin = np.ndarray(spectr_laser.size // bin_width, dtype=float)
+                    sp_nolight_bin = np.ndarray(spectr_laser.size // bin_width, dtype=float)
+                    
+                    for i in range(sp_laser_bin.size):
+                        sp_laser_bin[i] = np.sum(spectr_laser[i*bin_width:(1+i)*bin_width])
+                        sp_nolight_bin[i] = np.sum(spectr_nolight[i*bin_width:(1+i)*bin_width])
+                        
                 
                 
                     # Remove the no light spectrum
-                    spectrum = sp_laser_smth - sp_nolight_smth
-                    spectrum = spectrum[band_stop_mask]
-                    
+                    spectrum = sp_laser_bin - sp_nolight_bin
                     spectrum_tab[x_i, y_i, :] = spectrum
         
         
@@ -177,11 +201,11 @@ for f in folders :
                     
                     M = np.abs(np.max(spectrum))
                     p0 = [M/2, M/2, M/8, 0, 0, 585, 10]# initial guess for the fit
-                    bounds_inf = [0, 0 ,0 ,-2, -2, 580, 5] 
-                    bounds_sup = [M, M, M, 2, 2, 610, 100] 
+                    bounds_inf = [0, 0 ,0 ,-3, -3, 580, 5] 
+                    bounds_sup = [M, M, M, 3, 3, 610, 100] 
                     
                     try : 
-                        popt, pcov = op.curve_fit(func_fit, wavelengths, spectrum, p0, bounds=(bounds_inf, bounds_sup))
+                        popt, pcov = op.curve_fit(func_fit, wvlgth_bin, spectrum, p0, bounds=(bounds_inf, bounds_sup))
                         popt_tab[x_i, y_i, :] = popt
                     except RuntimeError:
                         pass

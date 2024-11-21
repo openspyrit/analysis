@@ -13,6 +13,8 @@ Save the mask
 IMPORTANT : use the White Light measurements
 """
 
+
+
 import os 
 
 import numpy as np
@@ -22,14 +24,12 @@ from scipy import interpolate
 from spas.metadata2 import read_metadata
 
 
-
-
 #%%
 
 threshold_ = 4e5 # nb counts/pixel on background for t_i = 1s, for a 16x16 image # threshold for binary masks
 
 
-type_reco = 'had_reco'     # 'had_reco' or 'nn_reco'
+type_reco = 'nn_reco'     # 'had_reco' or 'nn_reco'
 type_reco_npz = type_reco + '.npz'
 if type_reco == 'nn_reco':
     threshold_ = threshold_/4
