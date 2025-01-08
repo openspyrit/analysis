@@ -29,7 +29,7 @@ from spas.metadata2 import read_metadata
 threshold_ = 4e5 # nb counts/pixel on background for t_i = 1s, for a 16x16 image # threshold for binary masks
 
 
-type_reco = 'nn_reco'     # 'had_reco' or 'nn_reco'
+type_reco = 'had_reco'     # 'had_reco' or 'nn_reco'
 type_reco_npz = type_reco + '.npz'
 if type_reco == 'nn_reco':
     threshold_ = threshold_/4
@@ -153,7 +153,7 @@ for f in folders :
     for num_biopsy in list_biopsies : 
         print('numero biopsie : ', num_biopsy)
         for s in subdirs :
-            if s[11] == str(num_biopsy) :
+            if s[11] == str(num_biopsy) : # TODO: write another loop to get the biopsies > 10 s[11:12]
                 subpath = path + '/' + s + '/'
                 if "white" in s : 
                     file_cube_white = subpath + s + '_' + type_reco_npz

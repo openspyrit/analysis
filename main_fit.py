@@ -31,7 +31,7 @@ root_data = root + 'd/'
 root_ref = root + 'ref/'
 
 # os.mkdir(root + 'fitresults_' + )
-root_saveresults = root + 'fitresults_241121/'
+root_saveresults = root + 'fitresults_241122/'
 if os.path.exists(root_saveresults) == False :
     os.mkdir(root_saveresults)
 
@@ -75,12 +75,10 @@ fit_start = 614
 fit_stop = 650
 
 
-band_mask = (wavelengths >= 615) & (wavelengths <= 650)
+band_mask = (wavelengths >= fit_start) & (wavelengths <= fit_stop)
 wavelengths = wavelengths[band_mask]
 if save_fit_data == True : 
     np.save(root_saveresults + 'wavelengths_mask_' + str(fit_start) + '-' + str(fit_stop) + '.npy', wavelengths) 
-
-
 
 
 # Resampling the wavelength scale for the binned spectrum
@@ -88,8 +86,11 @@ bin_width = 10
 
 wvlgth_bin = np.ndarray(wavelengths.size // bin_width, dtype=float)
 
-for i in range(wavelengths.size):
+for i in range(wvlgth_bin.size):
     wvlgth_bin[i] = wavelengths[i*bin_width]
+if save_fit_data == True : 
+    np.save(root_saveresults + 'wavelengths_mask_bin_' + str(fit_start) + '-' + str(fit_stop) + '.npy', wvlgth_bin)     
+    
     
 
 
@@ -162,7 +163,7 @@ for f in folders :
         # @todo : define an array of shape (cube[0], cube[1], nb of param of func_fit)
         popt_tab = np.ndarray((cubehyper_laser.shape[0], cubehyper_laser.shape[1], 7), dtype = 'float64')
         popt_tab[:] = np.nan       
-        spectrum_tab = np.ndarray((cubehyper_laser.shape[0], cubehyper_laser.shape[1], np.size(wavelengths)), dtype='float64')
+        spectrum_tab = np.ndarray((cubehyper_laser.shape[0], cubehyper_laser.shape[1], np.size(wvlgth_bin)), dtype='float64')
         spectrum_tab[:] = np.nan   
          
         # Fit for every point of the mask
