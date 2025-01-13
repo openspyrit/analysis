@@ -77,6 +77,10 @@ spectr634[0] = 0 # otherwise kernel dies
 spectr620 = ppix620[0, :]
 spectr620[0] = 0
 
+
+del ppix620
+del ppix634
+
  
  
  # Normalize the reference spectra
