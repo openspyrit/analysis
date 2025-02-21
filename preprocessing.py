@@ -21,7 +21,8 @@ import numpy as np
 import cv2 as cv
 from scipy import interpolate
 
-from spas.metadata2 import read_metadata
+from spas.metadata import read_metadata
+
 
 
 #%%
@@ -35,19 +36,18 @@ if type_reco == 'nn_reco':
     threshold_ = threshold_/4
  
 
-root = 'D:/'
+root = 'C:/'
 root_data = root + 'd/'
 folders = os.listdir(root_data)
 
 
 root_ref = root + 'ref/'
 
-file_metadata_0 = 'D:/obj_biopsy-1_anterior-portion_source_Laser_405nm_1.2W_A_0.15_f80mm-P2_Walsh_im_16x16_ti_200ms_zoom_x1_metadata.json'
-
+# file_metadata_0 = 'D:/obj_biopsy-1_anterior-portion_source_Laser_405nm_1.2W_A_0.15_f80mm-P2_Walsh_im_16x16_ti_200ms_zoom_x1_metadata.json'
+file_metadata_0 = root + 'wavelengths_metadata.json'
 
 metadata, acquisition_params, spectrometer_params, dmd_params = read_metadata(file_metadata_0)
 wavelengths = acquisition_params.wavelengths
-
 
 
 
@@ -56,6 +56,8 @@ wavelengths = acquisition_params.wavelengths
 
 def func_fit(x, a1, a2, a3, shift620, shift634, lambd_c, sigma):
     return a1*func620(x-shift620) + a2*func634(x-shift634) + a3*np.exp(-(lambd_c-x)**2/sigma**2)
+
+
 
 
     
@@ -114,7 +116,7 @@ del spectr634_crop
  
 # Interpolate the reference spectra 
  
-func620 = interpolate.make_interp_spline(lambd, spectr620)  # interp1d is legacy
+func620 = interpolate.make_interp_spline(lambd, spectr620)  
 func634 = interpolate.make_interp_spline(lambd, spectr634)
 
 spectr620_interp = func620(wavelengths) # import wavelengths from metadata

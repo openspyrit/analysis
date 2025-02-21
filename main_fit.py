@@ -5,10 +5,10 @@ Created on Tue Oct 22 12:49:03 2024
 @author: chiliaeva
 """
 
-
 import numpy as np
+import pickle
 
-from spas.metadata2 import read_metadata
+from spas.metadata import read_metadata
 
 import scipy.signal as sg
 import scipy.optimize as op
@@ -23,15 +23,15 @@ import datetime as dt
 
 
 #%% Paths
+save_fit_data = True
 
-root = 'D:/'
-
+root = 'C:/'
 
 root_data = root + 'd/'
 root_ref = root + 'ref/'
 
 # os.mkdir(root + 'fitresults_' + )
-root_saveresults = root + 'fitresults_241122/'
+root_saveresults = root + 'fitresults_250219_full-spectra/'
 if os.path.exists(root_saveresults) == False :
     os.mkdir(root_saveresults)
 
@@ -41,7 +41,8 @@ print("folders", folders)
 
 
 # metadata file to get the wavelengths array :
-file_metadata = 'D:/obj_biopsy-1_anterior-portion_source_Laser_405nm_1.2W_A_0.15_f80mm-P2_Walsh_im_16x16_ti_200ms_zoom_x1_metadata.json'
+#file_metadata = 'D:/obj_biopsy-1_anterior-portion_source_Laser_405nm_1.2W_A_0.15_f80mm-P2_Walsh_im_16x16_ti_200ms_zoom_x1_metadata.json'
+file_metadata = root + 'wavelengths_metadata.json'
 metadata, acquisition_params, spectrometer_params, dmd_params = read_metadata(file_metadata)
 wavelengths = acquisition_params.wavelengths
 
@@ -49,36 +50,48 @@ wavelengths = acquisition_params.wavelengths
 
 #%% Parameters 
 
-save_fit_data = True
+# Fit bounds
+bounds = {
+"shift_min" : -2,
+"shift_max" : 2, # allows the fitting function to shift the Pp ref spectra by -shift_min to +shift_max
+"lbd_c_init" : 585, # initial guess for lipofuscin central wavelength (nm)
+"lbd_c_min" : 580, # lower bound
+"lbd_c_max" : 610, # upper bound
+"sigma_init" : 30,
+"sigma_min" : 20, 
+"sigma_max" : 40}
 
-type_reco = 'nn_reco'
+with open(root_saveresults + 'bounds.pickle', 'wb') as handle:
+    pickle.dump(bounds, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+
+type_reco = 'had_reco'
 type_reco_npz = type_reco + '.npz'
-
-
-
-real_spectro_reso = 2 # real resolution of the spectrometer (nm)
-theo_spectro_reso = (wavelengths[-1]-wavelengths[0])/len(wavelengths)
-kernel_size = int(real_spectro_reso/theo_spectro_reso) + 1 # size of the window for the median filter, must be odd
-if kernel_size %2 == 0 : 
-    kernel_size = kernel_size + 1
-
-
-
 
 
 # Perform the fit only on a part of the spectral domain 
 
-# reject_band = [606, 616] # exclude spectral band reject_band from fit (nm). To reject no band, set reject_band[0]=reject_band[1]
-# band_stop_mask = (wavelengths <= reject_band[0])|(wavelengths >= reject_band[1])
-
-fit_start = 614
-fit_stop = 650
+############ REJECT A SPECTRAL BAND #############################
+reject_band = [606, 616] # exclude spectral band reject_band from fit (nm). To reject no band, set reject_band[0]=reject_band[1]
+band_mask = (wavelengths <= reject_band[0])|(wavelengths >= reject_band[1])
 
 
-band_mask = (wavelengths >= fit_start) & (wavelengths <= fit_stop)
-wavelengths = wavelengths[band_mask]
+########### INCLUDE ONLY THIS BAND ###################
+# fit_start = 614
+# fit_stop = 650
+# band_mask = (wavelengths >= fit_start) & (wavelengths <= fit_stop)
+
+
 if save_fit_data == True : 
-    np.save(root_saveresults + 'wavelengths_mask_' + str(fit_start) + '-' + str(fit_stop) + '.npy', wavelengths) 
+    np.savetxt(root_saveresults + 'band_mask.npy', band_mask, fmt="%5i") 
+
+
+
+wavelengths = wavelengths[band_mask]
+
+if save_fit_data == True : 
+    np.save(root_saveresults + 'wavelengths_mask.npy', wavelengths) 
 
 
 # Resampling the wavelength scale for the binned spectrum
@@ -89,7 +102,7 @@ wvlgth_bin = np.ndarray(wavelengths.size // bin_width, dtype=float)
 for i in range(wvlgth_bin.size):
     wvlgth_bin[i] = wavelengths[i*bin_width]
 if save_fit_data == True : 
-    np.save(root_saveresults + 'wavelengths_mask_bin_' + str(fit_start) + '-' + str(fit_stop) + '.npy', wvlgth_bin)     
+    np.save(root_saveresults + 'wavelengths_mask_bin.npy', wvlgth_bin)     
     
     
 
@@ -201,9 +214,9 @@ for f in folders :
                     # FIT THE SPECTRUM TO REFERENCE SPECTRA
                     
                     M = np.abs(np.max(spectrum))
-                    p0 = [M/2, M/2, M/8, 0, 0, 585, 10]# initial guess for the fit
-                    bounds_inf = [0, 0 ,0 ,-3, -3, 580, 5] 
-                    bounds_sup = [M, M, M, 3, 3, 610, 100] 
+                    p0 = [M/2, M/2, M/8, 0, 0, bounds["lbd_c_init"], bounds["sigma_init"]] # initial guess for the fit
+                    bounds_inf = [0, 0 ,0 , bounds["shift_min"], bounds["shift_min"], bounds["lbd_c_min"], bounds["sigma_min"]] 
+                    bounds_sup = [M, M, M, bounds["shift_max"], bounds["shift_max"], bounds["lbd_c_max"], bounds["sigma_max"]] 
                     
                     try : 
                         popt, pcov = op.curve_fit(func_fit, wvlgth_bin, spectrum, p0, bounds=(bounds_inf, bounds_sup))
@@ -220,6 +233,7 @@ for f in folders :
             np.save(root_saveresults + f + '_' + type_reco + '/B' + str(num_biopsy) + '_' +  type_reco + '_spectrum_tab.npy', spectrum_tab) 
             np.save(root_saveresults + f + '_' + type_reco + '/B' + str(num_biopsy) + '_' +  type_reco + '_fit_params.npy', popt_tab) 
 
+        
 
     list_biopsies = []      
 
