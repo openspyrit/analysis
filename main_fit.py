@@ -31,7 +31,7 @@ root_data = root + 'd/'
 root_ref = root + 'ref/'
 
 # os.mkdir(root + 'fitresults_' + )
-root_saveresults = root + 'fitresults_250219_full-spectra/'
+root_saveresults = root + 'fitresults_250317_full-spectra_/'
 if os.path.exists(root_saveresults) == False :
     os.mkdir(root_saveresults)
 
@@ -54,12 +54,12 @@ wavelengths = acquisition_params.wavelengths
 bounds = {
 "shift_min" : -2,
 "shift_max" : 2, # allows the fitting function to shift the Pp ref spectra by -shift_min to +shift_max
-"lbd_c_init" : 585, # initial guess for lipofuscin central wavelength (nm)
-"lbd_c_min" : 580, # lower bound
-"lbd_c_max" : 610, # upper bound
-"sigma_init" : 30,
-"sigma_min" : 20, 
-"sigma_max" : 40}
+"lbd_c_init" : 590, # initial guess for lipofuscin central wavelength (nm)
+"lbd_c_min" : 585, # lower bound
+"lbd_c_max" : 595, # upper bound
+"sigma_init" : 15,
+"sigma_min" : 10, 
+"sigma_max" : 20}
 
 with open(root_saveresults + 'bounds.pickle', 'wb') as handle:
     pickle.dump(bounds, handle, protocol=pickle.HIGHEST_PROTOCOL)
@@ -147,16 +147,18 @@ for f in folders :
     for num_biopsy in list_biopsies : 
         print('numero biopsie : ', num_biopsy)
         for s in subdirs :
-            if s[11] == str(num_biopsy) :
+            if s[11] == str(num_biopsy) and s[12] == '-' :
                 subpath = path + '/' + s + '/'
+                print('subpath =', subpath)
                 if "Laser" in s : 
                     file_cube_laser = subpath + s + '_' + type_reco_npz
                 elif "No-light" in s :
                     file_cube_nolight = subpath + s + '_' + type_reco_npz
                 elif "white" in s : 
                     file_mask = subpath + type_reco + '_mask.npy'
-                       
+   
                     
+
         print("start reading hypercube")            
         # Read laser hypercube
         cubeobj = np.load(file_cube_laser)

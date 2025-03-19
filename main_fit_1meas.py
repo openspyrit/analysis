@@ -28,19 +28,20 @@ bin_width = 10
 
 root = 'C:/'
 
-num_patient = 'P61'
-num_biopsy = 'B8'
+num_patient = 'P65'
+num_biopsy = 'B10'
 
 root_data = root + 'd/' + num_patient + '/'
 root_ref = root + 'ref/'
 
 # os.mkdir(root + 'fitresults_' + )
-root_saveresults = root + 'fitresults/' 
+root_saveresults = root + 'fitresults_250311/' 
+if os.path.exists(root_saveresults) == False :
+    os.mkdir(root_saveresults)
+    
 
 type_reco = 'had_reco'
 type_reco_npz = type_reco + '.npz'
-
-
 
 
 # folders = os.listdir(root_data)
@@ -54,9 +55,17 @@ metadata, acquisition_params, spectrometer_params, dmd_params = read_metadata(fi
 wavelengths = acquisition_params.wavelengths
 
 
-file_cube_laser = 'C:/d/P61/obj_biopsy-8-deep-limit_source_Laser_405nm_1.2W_A_0.15_f80mm-P2_Walsh_im_16x16_ti_150ms_zoom_x1/obj_biopsy-8-deep-limit_source_Laser_405nm_1.2W_A_0.15_f80mm-P2_Walsh_im_16x16_ti_150ms_zoom_x1_had_reco.npz'
-file_cube_nolight = 'C:/d/P61/obj_biopsy-8-deep-limit_source_No-light_f80mm-P2_Walsh_im_16x16_ti_150ms_zoom_x1/obj_biopsy-8-deep-limit_source_No-light_f80mm-P2_Walsh_im_16x16_ti_150ms_zoom_x1_had_reco.npz'
-file_mask = root_data + 'obj_biopsy-8-deep-limit_source_white_LED_f80mm-P2_Walsh_im_16x16_ti_10ms_zoom_x1/' + type_reco + '_mask' + '.npy' 
+# 'C:/d/P64/obj_biopsy-10-intern-limit_source_No-light_f80mm-P2_Walsh_im_16x16_ti_100ms_zoom_x1/obj_biopsy-10-intern-limit_source_No-light_f80mm-P2_Walsh_im_16x16_ti_100ms_zoom_x1_had_reco.npz'
+
+# 'C:/d/P64/obj_biopsy-11-singular-portion_source_Laser_405nm_1.2W_A_0.14_f80mm-P2_Walsh_im_16x16_ti_100ms_zoom_x1/obj_biopsy-11-singular-portion_source_Laser_405nm_1.2W_A_0.14_f80mm-P2_Walsh_im_16x16_ti_100ms_zoom_x1_had_reco.npz'
+
+
+
+
+file_cube_laser = 'C:/d/P65/obj_biopsy-10-posterior-limit_source_Laser_405nm_1.2W_A_0.14_f80mm-P2_Walsh_im_32x32_ti_75ms_zoom_x1/obj_biopsy-10-posterior-limit_source_Laser_405nm_1.2W_A_0.14_f80mm-P2_Walsh_im_32x32_ti_75ms_zoom_x1_had_reco.npz'
+file_cube_nolight = 'C:/d/P65/obj_biopsy-10-posterior-limit_source_No-light_f80mm-P2_Walsh_im_32x32_ti_75ms_zoom_x1/obj_biopsy-10-posterior-limit_source_No-light_f80mm-P2_Walsh_im_32x32_ti_75ms_zoom_x1_had_reco.npz'
+file_mask = 'C:/d/P65/obj_biopsy-10-posterior-limit_source_white_LED_f80mm-P2_Walsh_im_32x32_ti_10ms_zoom_x1/had_reco_mask.npy'
+# file_mask = root_data + 'obj_biopsy-10-intern-limit_source_white_LED_f80mm-P2_Walsh_im_16x16_ti_100ms_zoom_x1/' + type_reco + '_mask' + '.npy' 
 
 
 # file_cube_laser = root_data + 'obj_biopsy-10-intern-limit_source_Laser_405nm_1.2W_A_0.14_f80mm-P2_Walsh_im_16x16_ti_100ms_zoom_x1/obj_biopsy-10-intern-limit_source_Laser_405nm_1.2W_A_0.14_f80mm-P2_Walsh_im_16x16_ti_100ms_zoom_x1_had_reco.npz'
@@ -75,11 +84,16 @@ if kernel_size %2 == 0 :
     kernel_size = kernel_size + 1
 
 
-fit_start = 614
-fit_stop = 650
+reject_band = [606, 616] # exclude spectral band reject_band from fit (nm). To reject no band, set reject_band[0]=reject_band[1]
+band_mask = (wavelengths <= reject_band[0])|(wavelengths >= reject_band[1])
 
 
-band_mask = (wavelengths >= fit_start) & (wavelengths <= fit_stop)
+# fit_start = 614
+# fit_stop = 650
+# band_mask = (wavelengths >= fit_start) & (wavelengths <= fit_stop)
+
+
+
 wavelengths = wavelengths[band_mask]
 if save_fit_data == True :  
     np.save(root_saveresults + 'wavelengths_mask.npy', wavelengths) 
@@ -172,7 +186,7 @@ for x_i in range(cubehyper_laser.shape[0]):
             # bounds_inf = [0, 0 ,0 ,-2, -2, 580, 5] 
             # bounds_sup = [M, M, M, 2, 2, 610, 100] 
             
-            p0 = [M/2, M/2, M/8, 0, 0, 590, 25]# initial guess for the fit
+            p0 = [M/2, M/2, M/8, 0, 0, 590, 30]# initial guess for the fit
             bounds_inf = [0, 0 ,0 ,-2, -2, 585, 20] 
             bounds_sup = [M, M, M, 2, 2, 595, 40] 
             
@@ -188,7 +202,8 @@ print('end fit for image', time.time()-t0)
 
 
 if save_fit_data == True:
-    os.mkdir(root_saveresults + num_patient + '_' +  type_reco)
+    if os.path.exists(root_saveresults + num_patient + '_' +  type_reco) == False :
+        os.mkdir(root_saveresults + num_patient + '_' +  type_reco)
     np.save(root_saveresults + num_patient + '_' + type_reco + '/' + num_biopsy + '_' +  type_reco + '_spectrum_tab.npy', spectrum_tab) 
     np.save(root_saveresults + num_patient + '_' + type_reco + '/' + num_biopsy + '_' +  type_reco + '_fit_params.npy', popt_tab) 
 
