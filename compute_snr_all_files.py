@@ -30,10 +30,10 @@ savefig_hist = True
 
 type_reco = 'had_reco'
 
-root_saveresults = 'C:/Users/chiliaeva/Documents/Resultats_traitement/fitresults_241119_full_spectra/'
+root_saveresults = 'C:/fitresults_250220_full-spectra/'
 
 
-file_wvlgth = root_saveresults + 'wavelengths_mask_606-616.npy'
+file_wvlgth = root_saveresults + 'wavelengths_mask_bin.npy'
 wavelengths = np.load(file_wvlgth)
 
 
@@ -57,25 +57,33 @@ mean_snr_tab = np.empty(np.shape(list_spectrum_files))
 max_snr_tab = np.empty(np.shape(list_spectrum_files))
 mean_std_tab = np.empty(np.shape(list_spectrum_files))
 
+list_measurements = []
 
 
 for index, file in enumerate(list_spectrum_files) : 
     
+    print('file N°', index)
+    
     num_patient = get_next_n_chars(file, 'P', 3)
     num_biopsy = get_next_n_chars(file, 'B', 2)
+    list_measurements.append(num_patient+num_biopsy)
+    
     
     spectrum_tab = np.load(file)
-    
+
     
     nb_tab = np.empty_like(spectrum_tab[:,:,0])
     std_tab = np.empty_like(spectrum_tab[:,:,0])
     snr_tab = np.empty_like(spectrum_tab[:,:,0])
+    integral_tab = np.empty_like(spectrum_tab[:,:,0])
 
 
     for i in range(spectrum_tab.shape[0]):
+        print (i)
         for j in range(spectrum_tab.shape[1]):
+            print(j)
         
-            nb_tab[i, j], std_tab[i, j], snr_tab[i, j] =  compute_snr(spectrum_tab, wavelengths, i, j, std_bounds, max_interval)
+            nb_tab[i, j], std_tab[i, j], snr_tab[i, j], integral_tab[i, j] =  compute_snr(spectrum_tab, wavelengths, i, j, std_bounds, max_interval)
         
             
     plt.figure('STD')
@@ -119,14 +127,25 @@ for index, file in enumerate(list_spectrum_files) :
 ########################################################################################
 #%% Statistics 
 
-plt.figure("Mean SNR")
-plt.clf()
-plt.plot(mean_snr_tab, marker='p', linestyle='')
+save_stats = False 
 
 
-plt.figure("Max SNR")
-plt.clf()
-plt.plot(max_snr_tab, marker='p', linestyle='')
+fig, ax = plt.subplots(1, 1, figsize = [16, 8])
+ax.plot(list_measurements, mean_snr_tab, marker='p', linestyle='')
+ax.tick_params(axis='x', rotation=55, labelsize=8)
+plt.xlabel("Measurement N°")
+plt.ylabel("Mean SNR value")
+if save_stats : 
+    plt.savefig(root_savefig + type_reco + '_mean_snr_all_measurements', bbox_inches = 'tight')
+
+
+fig, ax = plt.subplots(1, 1, figsize = [16, 8])
+ax.plot(list_measurements, max_snr_tab, marker='p', linestyle='')
+ax.tick_params(axis='x', rotation=55, labelsize=8)
+plt.xlabel("Measurement N°")
+plt.ylabel("Max SNR value")
+if save_stats : 
+    plt.savefig(root_savefig + type_reco + '_max_snr_all_measurements', bbox_inches = 'tight')
 
 
 

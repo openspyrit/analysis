@@ -25,7 +25,7 @@ import cv2 as cv
 #%%
 mksize = 4
 
-savefig_maps = True
+savefig_maps = False
 show_spectrum_pos = False
 
 # savefig_spectrum = False
@@ -37,7 +37,7 @@ type_reco = 'had_reco'
 # root = 'D:/'
 root = 'C:/'
 # root = 'C:/Users/chiliaeva/Documents/Resultats_traitement/'
-root_saveresults = root + 'fitresults_250219_full-spectra/'
+root_saveresults = root + 'fitresults_250317_full-spectra/'
 
 
 root_savefig = root_saveresults + 'fig/'
@@ -46,14 +46,14 @@ if os.path.exists(root_savefig) == False :
 
 
 
-num_patient = 'P61_'
-num_biopsy = 'B8'
+num_patient = 'P63_'
+num_biopsy = 'B3'
 
 
 
 # Position of the spectrum to plot :
-x = 6
-y = 8
+x = 11
+y = 21
 if type_reco == 'nn_reco' :
     x = 4*x
     y = 4*y
@@ -75,7 +75,42 @@ if type_reco == 'nn_reco':
     params_tab = cv.flip(params_tab, 0)
    
     
+
 #%%
+    
+def func_plot_map_nb(params_tab, nb, show_spectrum_pos, x, y, c_lim):
+    # plot abundance map number "nb"
+    plt.figure("map nb" + str(nb))
+    plt.clf()
+    plt.title("map nb" + str(nb))
+    plt.imshow(params_tab[:,:,nb])
+    if c_lim == True :
+        plt.clim(min_ppix, max_ppix)
+    plt.colorbar()
+    plt.grid()
+    if show_spectrum_pos == True :
+        plt.plot(y,x, "or", markersize = mksize)
+
+
+
+#%%
+
+c_lim = True 
+nb = 1
+
+func_plot_map_nb(params_tab, nb, show_spectrum_pos, 21, 20, c_lim)
+
+
+
+#%% Save abundance map 
+
+plt.gcf()
+plt.savefig(root_savefig + num_patient + num_biopsy + '_' + type_reco + '_map_nb' + str(nb) + '.png', bbox_inches='tight')
+
+
+
+#%%
+'''
 # Plot and save all the abundance maps 
 for i in range(np.shape(params_tab)[2]) :
     plt.figure("map nb" + str(i))
@@ -89,7 +124,7 @@ for i in range(np.shape(params_tab)[2]) :
     if savefig_maps == True :
         plt.savefig(root_savefig + num_patient + num_biopsy + '_' + type_reco + '_map_nb' + str(i) + '.png', bbox_inches='tight')
         
-        
+'''        
         
         
 
@@ -179,26 +214,6 @@ for folder in folders :
                 plt.colorbar()
                 plt.savefig(root_maps + num_patient + num_biops + '_' + type_reco + '_sigma_lipo_map.png', bbox_inches='tight')
                 plt.close()
-
-
-
-
-#%%
-    
-def func_plot_map_nb(params_tab, nb):
-    # plot abundance map number "nb"
-    plt.figure("map nb" + str(i))
-    plt.clf()
-    plt.title("map nb" + str(i))
-    plt.imshow(params_tab[:,:,i])
-    plt.clim(min_ppix, max_ppix)
-    plt.colorbar()
-
-
-#%%
-nb = 2 
-
-func_plot_map_nb(params_tab, nb)
 
 
 

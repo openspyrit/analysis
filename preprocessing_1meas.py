@@ -23,7 +23,7 @@ from spas.metadata2 import read_metadata
 threshold_ = 4e5 # nb counts/pixel on background for t_i = 1s, for a 16x16 image # threshold for binary masks
 
 
-type_reco = 'nn_reco'     # 'had_reco' or 'nn_reco'
+type_reco = 'had_reco'     # 'had_reco' or 'nn_reco'
 type_reco_npz = type_reco + '.npz'
 if type_reco == 'nn_reco':
     threshold_ = threshold_/4
@@ -31,15 +31,21 @@ if type_reco == 'nn_reco':
     
 root = 'D:/'
 root_data = root + 'd/' # all the patient folders were saved in the root_data directory
-# folders = os.listdir(root_data)
+
 
 root_ref = root + 'ref/' # the reference spectra are in the root_ref directory
 
-# "obj_biopsy-10-intern-limit_source_white_LED_f80mm-P2_Walsh_im_16x16_ti_100ms_zoom_x1"
 
-subpath = 'D:/d/P64/obj_biopsy-10-intern-limit_source_white_LED_f80mm-P2_Walsh_im_16x16_ti_100ms_zoom_x1/'
-file_cube_white = 'D:/d/P64/obj_biopsy-10-intern-limit_source_white_LED_f80mm-P2_Walsh_im_16x16_ti_100ms_zoom_x1/obj_biopsy-10-intern-limit_source_white_LED_f80mm-P2_Walsh_im_16x16_ti_100ms_zoom_x1_' + type_reco_npz
-file_metadata = 'D:/d/P64/obj_biopsy-10-intern-limit_source_white_LED_f80mm-P2_Walsh_im_16x16_ti_100ms_zoom_x1/obj_biopsy-10-intern-limit_source_white_LED_f80mm-P2_Walsh_im_16x16_ti_100ms_zoom_x1_metadata.json'
+# 'C:/d/P64/obj_biopsy-10-intern-limit_source_white_LED_f80mm-P2_Walsh_im_16x16_ti_100ms_zoom_x1/obj_biopsy-10-intern-limit_source_white_LED_f80mm-P2_Walsh_im_16x16_ti_100ms_zoom_x1_had_reco.npz'
+# 'C:/d/P64/obj_biopsy-11-singular-portion_source_white_LED_f80mm-P2_Walsh_im_16x16_ti_100ms_zoom_x1/obj_biopsy-11-singular-portion_source_white_LED_f80mm-P2_Walsh_im_16x16_ti_100ms_zoom_x1_had_reco.npz'
+# 'C:/d/P64/obj_biopsy-12-anter-limit_source_white_LED_f80mm-P2_Walsh_im_16x16_ti_100ms_zoom_x1/obj_biopsy-12-anter-limit_source_white_LED_f80mm-P2_Walsh_im_16x16_ti_100ms_zoom_x1_had_reco.npz'
+# 'C:/d/P65/obj_biopsy-10-posterior-limit_source_white_LED_f80mm-P2_Walsh_im_32x32_ti_10ms_zoom_x1/obj_biopsy-10-posterior-limit_source_white_LED_f80mm-P2_Walsh_im_32x32_ti_10ms_zoom_x1_had_reco.npz'
+
+
+
+subpath = 'C:/d/P64/obj_biopsy-12-anter-limit_source_white_LED_f80mm-P2_Walsh_im_16x16_ti_100ms_zoom_x1/'
+file_cube_white = 'C:/d/P64/obj_biopsy-12-anter-limit_source_white_LED_f80mm-P2_Walsh_im_16x16_ti_100ms_zoom_x1/obj_biopsy-12-anter-limit_source_white_LED_f80mm-P2_Walsh_im_16x16_ti_100ms_zoom_x1_' + type_reco_npz
+file_metadata = 'C:/d/P64/obj_biopsy-12-anter-limit_source_white_LED_f80mm-P2_Walsh_im_16x16_ti_100ms_zoom_x1/obj_biopsy-12-anter-limit_source_white_LED_f80mm-P2_Walsh_im_16x16_ti_100ms_zoom_x1_metadata.json'
 
 
 metadata, acquisition_params, spectrometer_params, dmd_params = read_metadata(file_metadata)
