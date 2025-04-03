@@ -24,13 +24,13 @@ from snr_functions import compute_snr
 
 #%%
 
-savefig_map = False
-savedata = False
+savefig_map = True
+savedata = True
 savefig_hist = True
 
 type_reco = 'had_reco'
 
-root_saveresults = 'C:/fitresults_250220_full-spectra/'
+root_saveresults = 'C:/fitresults_250317_full-spectra/'
 
 
 file_wvlgth = root_saveresults + 'wavelengths_mask_bin.npy'
@@ -127,7 +127,7 @@ for index, file in enumerate(list_spectrum_files) :
 ########################################################################################
 #%% Statistics 
 
-save_stats = False 
+save_stats = True
 
 
 fig, ax = plt.subplots(1, 1, figsize = [16, 8])

@@ -10,7 +10,6 @@ import pickle
 
 from spas.metadata import read_metadata
 
-import scipy.signal as sg
 import scipy.optimize as op
 # from scipy import interpolate
 # from preprocessing import func620, func634
@@ -19,7 +18,6 @@ from preprocessing import func_fit
 
 import os
 import time
-import datetime as dt
 
 
 #%% Paths
@@ -33,7 +31,7 @@ root_data = root + 'd/'
 root_ref = root + 'ref/'
 
 # os.mkdir(root + 'fitresults_' + )
-root_saveresults = root + 'fitresults_250331_nn_reco_/'
+root_saveresults = root + 'fitresults_250331_nn_reco/'
 if os.path.exists(root_saveresults) == False :
     os.mkdir(root_saveresults)
 
@@ -66,7 +64,7 @@ bounds = {
 with open(root_saveresults + 'bounds.pickle', 'wb') as handle:
     pickle.dump(bounds, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-
+spat_bin = 0 # number of neighbours (in every direction) to take into account in the spatial averaging
 
 type_reco = 'nn_reco'
 type_reco_npz = type_reco + '.npz'
@@ -149,19 +147,29 @@ for f in folders :
     for num_biopsy in list_biopsies : 
         print('numero biopsie : ', num_biopsy)
         for s in subdirs :
-            if s[11] == str(num_biopsy) and s[12] == '-' :
-                subpath = path + '/' + s + '/'
-                print('subpath =', subpath)
-                if "Laser" in s : 
-                    file_cube_laser = subpath + s + '_' + type_reco_npz
-                elif "No-light" in s :
-                    file_cube_nolight = subpath + s + '_' + type_reco_npz
-                elif "white" in s : 
-                    file_mask = subpath + type_reco + '_mask.npy'
-   
-                    
+           print('s =', s)
+           if (s[11] == str(num_biopsy) and (s[12] == '-' or s[12] == '_') ):
+               print('loop1, ', 's[12] :', s[12])
+               subpath = path + '/' + s + '/'
+               if "Laser" in s : 
+                   file_cube_laser = subpath + s + '_' + type_reco_npz
+               elif "No-light" in s :
+                   file_cube_nolight = subpath + s + '_' + type_reco_npz
+               elif "white" in s : 
+                   file_mask = subpath + type_reco + '_mask.npy'
+           elif s[11:13] == str(num_biopsy) :
+               print('loop2, ', 's[12] :', s[12])
+               subpath = path + '/' + s + '/'
+               if "Laser" in s : 
+                   file_cube_laser = subpath + s + '_' + type_reco_npz
+               elif "No-light" in s :
+                   file_cube_nolight = subpath + s + '_' + type_reco_npz
+               elif "white" in s : 
+                   file_mask = subpath + type_reco + '_mask.npy'
 
-        print("start reading hypercube")            
+                    
+        print("start reading hypercube")  
+                  
         # Read laser hypercube
         cubeobj = np.load(file_cube_laser)
         cubehyper_laser = cubeobj['arr_0']
@@ -188,6 +196,7 @@ for f in folders :
         print('start fit for the entire image', time.time()-t0)
         
         
+        # Remove background and spectral binning 
         for x_i in range(cubehyper_laser.shape[0]):
             for y_i in range(cubehyper_laser.shape[1]):
                 
@@ -208,33 +217,46 @@ for f in folders :
                         sp_nolight_bin[i] = np.sum(spectr_nolight[i*bin_width:(1+i)*bin_width])
                         
                 
-                
                     # Remove the no light spectrum
                     spectrum = sp_laser_bin - sp_nolight_bin
                     spectrum_tab[x_i, y_i, :] = spectrum
-        
-        
-        
-                    # FIT THE SPECTRUM TO REFERENCE SPECTRA
                     
-                    M = np.abs(np.max(spectrum))
-                    p0 = [M/2, M/2, M/8, 0, 0, bounds["lbd_c_init"], bounds["sigma_init"]] # initial guess for the fit
-                    bounds_inf = [0, 0 ,0 , bounds["shift_min"], bounds["shift_min"], bounds["lbd_c_min"], bounds["sigma_min"]] 
-                    bounds_sup = [M, M, M, bounds["shift_max"], bounds["shift_max"], bounds["lbd_c_max"], bounds["sigma_max"]] 
+    
+            
+        # Compute spatial average of spectrum_tab
+        spectrum_tab_avg = np.empty_like(spectrum_tab)
+        
+
+        for i in range(spectrum_tab.shape[0]):
+            for j in range(spectrum_tab.shape[1]):
+                if not np.isnan(spectrum_tab[i,j,:]).any() :
+                    spectrum_avg = np.nanmean(np.nanmean(spectrum_tab[i-spat_bin:i+spat_bin+1,j-spat_bin:j+spat_bin+1,:], axis=0), axis=0)
+                    spectrum_tab_avg[i,j,:] = spectrum_avg
                     
-                    try : 
-                        popt, pcov = op.curve_fit(func_fit, wvlgth_bin, spectrum, p0, bounds=(bounds_inf, bounds_sup))
-                        popt_tab[x_i, y_i, :] = popt
-                    except RuntimeError:
-                        pass
+                    if not np.isnan(spectrum_avg).any() :
+                        
+                        # FIT THE SPECTRUM TO REFERENCE SPECTRA
+                        M = np.abs(np.max(spectrum_avg))
+                        p0 = [M/2, M/2, M/8, 0, 0, bounds["lbd_c_init"], bounds["sigma_init"]] # initial guess for the fit
+                        bounds_inf = [0, 0 ,0 , bounds["shift_min"], bounds["shift_min"], bounds["lbd_c_min"], bounds["sigma_min"]] 
+                        bounds_sup = [M, M, M, bounds["shift_max"], bounds["shift_max"], bounds["lbd_c_max"], bounds["sigma_max"]] 
+                        
+                        try : 
+                            popt, pcov = op.curve_fit(func_fit, wvlgth_bin, spectrum_avg, p0, bounds=(bounds_inf, bounds_sup))
+                            popt_tab[i, j, :] = popt
+                        except RuntimeError:
+                            pass
+                        
+                    
+                else :
+                    spectrum_tab_avg[i,j,:] = np.nan
                 
                 
                 
         print('end fit for image', time.time()-t0)  
         
-   
         if save_fit_data == True:
-            np.save(root_saveresults + f + '_' + type_reco + '/B' + str(num_biopsy) + '_' +  type_reco + '_spectrum_tab.npy', spectrum_tab) 
+            np.save(root_saveresults + f + '_' + type_reco + '/B' + str(num_biopsy) + '_' +  type_reco + '_spectrum_tab.npy', spectrum_tab_avg) 
             np.save(root_saveresults + f + '_' + type_reco + '/B' + str(num_biopsy) + '_' +  type_reco + '_fit_params.npy', popt_tab) 
 
         

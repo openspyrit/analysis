@@ -22,8 +22,8 @@ root = 'C:/'
 root_snr = root + 'snr/'
 
 
-num_patient = 'P65_'
-num_biopsy = 'B9_'
+num_patient = 'P68_'
+num_biopsy = 'B1_'
 
 
 # max_snr = np.load(root_snr + num_patient + num_biopsy + type_reco + '_max_snr.npy')

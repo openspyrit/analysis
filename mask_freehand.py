@@ -28,12 +28,14 @@ wvlgth_stop = 650
 
 # type_reco = 'had_reco'
 
-file_cube_laser = 'C:/d/P63/obj_biopsy-9-intern-limit_source_Laser_405nm_1.2W_A_0.14_f80mm-P1_Walsh_im_64x64_ti_15ms_zoom_x1/obj_biopsy-9-intern-limit_source_Laser_405nm_1.2W_A_0.14_f80mm-P1_Walsh_im_64x64_ti_15ms_zoom_x1_had_reco.npz'
+file_cube_laser = 'C:/d/P64/obj_biopsy-1-lateral-portion_source_Laser_405nm_1.2W_A_0.14_f80mm-P2_Walsh_im_64x64_ti_15ms_zoom_x1/obj_biopsy-1-lateral-portion_source_Laser_405nm_1.2W_A_0.14_f80mm-P2_Walsh_im_64x64_ti_15ms_zoom_x1_nn_reco.npz'
+subpath = 'C:/d/P63/obj_biopsy-9-intern-limit_source_white_LED_f80mm-P1_Walsh_im_64x64_ti_15ms_zoom_x1/'
 
 
 file_metadata = 'C:/d/P63/obj_biopsy-4-contrast_source_Laser_405nm_1.2W_A_0.14+white_LED_f80mm-P2_Walsh_im_64x64_ti_20ms_zoom_x1/obj_biopsy-4-contrast_source_Laser_405nm_1.2W_A_0.14+white_LED_f80mm-P2_Walsh_im_64x64_ti_20ms_zoom_x1_metadata.json'
 
-type_reco = file_cube_laser[-12:-4]
+# type_reco = file_cube_laser[-12:-4]
+type_reco = 'nn_reco'
 
 
 metadata, acquisition_params, spectrometer_params, dmd_params = read_metadata(file_metadata)
@@ -111,8 +113,6 @@ if len(points) > 2:
     
     
 #%%
-subpath = 'C:/d/P63/obj_biopsy-9-intern-limit_source_white_LED_f80mm-P1_Walsh_im_64x64_ti_15ms_zoom_x1'
-
 
 # Save mask 
 if os.path.isfile(subpath + '/' + type_reco + '_mask.npy') == False :

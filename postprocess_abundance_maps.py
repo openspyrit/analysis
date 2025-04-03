@@ -19,25 +19,37 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2 as cv
+import matplotlib.colors as colors
+
+from matplotlib.colors import TwoSlopeNorm
 
 
 
 #%%
+
 mksize = 4
 
 savefig_maps = False
 show_spectrum_pos = False
 
+savefig_ratio = False
+savenpy_ratio = True
+
 # savefig_spectrum = False
 
-type_reco = 'had_reco'
+type_reco = 'nn_reco'
 
 
 # Get fit data
 # root = 'D:/'
 root = 'C:/'
 # root = 'C:/Users/chiliaeva/Documents/Resultats_traitement/'
-root_saveresults = root + 'fitresults_250317_full-spectra/'
+
+# root_saveresults = root + 'fitresults_250331_nn_reco/'
+# root_saveresults = root + 'fitresults_250331_nn_reco/'
+root_saveresults = root + 'fitresults_250327_full-spectra_spat-bin_0/'
+
+
 
 
 root_savefig = root_saveresults + 'fig/'
@@ -46,8 +58,8 @@ if os.path.exists(root_savefig) == False :
 
 
 
-num_patient = 'P63_'
-num_biopsy = 'B3'
+num_patient = 'P60_'
+num_biopsy = 'B4'
 
 
 
@@ -95,10 +107,11 @@ def func_plot_map_nb(params_tab, nb, show_spectrum_pos, x, y, c_lim):
 
 #%%
 
-c_lim = True 
-nb = 1
+c_lim = True  # colorbar between min(620, 634) and max(620, 634)
+nb = 1 # number of the map 
 
 func_plot_map_nb(params_tab, nb, show_spectrum_pos, 21, 20, c_lim)
+
 
 
 
@@ -217,22 +230,67 @@ for folder in folders :
 
 
 
+                
 
 
+#%% Log transform the data, then use TwoSlopeNorm
+
+vmax = 0.5
+norm = TwoSlopeNorm(vmin=-vmax, vcenter=0, vmax=vmax)
+cmap = plt.get_cmap('viridis')
+
+# lim = 1e-4 # values below this limit take this value
 
 
+#########################################################################################
+
+root_ratios = root_savefig + 'maps/ratios_log_scale_vmax=' + str(vmax) + '_green_background/'
+if os.path.exists(root_ratios) == False :
+    os.mkdir(root_ratios)
 
 
+folders = os.listdir(root_saveresults)
 
-
-
-
-
-
-
-
-
-
+for folder in folders : 
+    if 'P' in folder :
+        num_patient = folder[0:4]
+        type_reco = folder[4:]
+        path = os.path.join(root_saveresults, folder)
+        files = os.listdir(path)
+        for file in files :
+            if 'fit_params' in file :
+                num_biops = file[0:3]
+                print('P', num_patient, 'B', num_biops)
+                subpath = os.path.join(path, file)
+                coef_P620 = np.load(subpath)[:,:,0]
+                coef_P634 = np.load(subpath)[:,:,1]
+                
+                xx = np.linspace(0, coef_P620[0].size, coef_P620[0].size, endpoint = False)
+                yy = np.linspace(0, coef_P620[0].size, coef_P620[0].size, endpoint = False)
+                X, Y = np.meshgrid(xx, yy)
+                
+                
+                # coef_P620 = np.where(coef_P620 >= lim, coef_P620, lim) # remove values that are too close to zero
+                # coef_P634 = np.where(coef_P634 >= lim, coef_P634, lim)
+                
+                
+                ratio = coef_P620/coef_P634
+                if savenpy_ratio :
+                    np.save(root_ratios + num_patient + num_biops + '_' + type_reco + '_ratio_620_634.npy', ratio)
+                ratio = np.where(np.isnan(ratio), 1, ratio)
+                log_ratio = np.log10(ratio)
+                
+                                
+                plt.figure()
+                plt.imshow(log_ratio, cmap=cmap, norm=norm)
+                plt.colorbar()
+                plt.grid()
+                if savefig_ratio :
+                    plt.savefig(root_ratios + num_patient + num_biops + '_' + type_reco + '_ratio_620_634.png', bbox_inches='tight')
+                plt.close()
+                
+                
+                
 
 
 

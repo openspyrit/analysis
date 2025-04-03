@@ -45,10 +45,12 @@ type_reco = 'had_reco'
 # root = 'C:/Users/chiliaeva/Documents/Resultats_traitement/'
 root = 'C:/'
 # root = 'D:/'
-root_saveresults = root + 'fitresults_250313_full-spectra_/'
+root_saveresults = root + 'fitresults_250327_full-spectra_spat-bin_3/'
 # root_saveresults = root + 'fitresults_250206_narrow_lipo_binning_2/'
 root_ref = root + 'ref/'
 
+
+spat_bin = 3
 
 root_savefig = root_saveresults + 'fig/'
 if os.path.exists(root_savefig) == False :
@@ -67,8 +69,8 @@ wvlgth_bin = np.load(root_saveresults + "wavelengths_mask_bin.npy")
 
 
 
-num_patient = 'P69_'
-num_biopsy = 'B5'
+num_patient = 'P68_'
+num_biopsy = 'B1'
 
 
 bounds_file = root_saveresults + 'bounds.pickle'
@@ -125,16 +127,11 @@ for i in range(spectr620_bin.size):
 
 
 # Position of the spectrum to plot :
-x = 15
-y = 19
+x = 13
+y = 20
 if type_reco == 'nn_reco' :
     x = 4*x
     y = 4*y
-
-
-# Spatial binning 
-spat_bin = 3 # number of neighbours (in every direction) to take into account in the spatial averaging
-
 
 
 file_params = root_saveresults + num_patient +  type_reco + '/' + num_biopsy + '_' + type_reco + '_fit_params.npy'
@@ -159,74 +156,7 @@ spectr_lipo_coef = params_tab[x,y,2] * np.exp(-(params_tab[x,y,5]-wvlgth_bin)**2
 
 
 spectrum = spectrum_tab[x, y, :] # real spectrum 
-
-# Spatial averaging of the raw spectrum : 
-spectrum = np.nanmean(np.nanmean(spectrum_tab[x-spat_bin:x+spat_bin+1,y-spat_bin:y+spat_bin+1,:], axis=0), axis=0)
-
-
-
-# Spatial averaging of the fitting curve and its components : 
-
-
-spectrum_fit_sum = np.zeros(wvlgth_bin.size, dtype=float)
-cpt = 0
-
-for i in range(x-spat_bin, x+spat_bin+1):
-    for j in range(y-spat_bin, y+spat_bin+1):
-        print("i,j = ", i, j)
-        spectrum_temp = func_fit(wvlgth_bin, *params_tab[i, j, :])
-        if not np.isnan(spectrum_temp).any() :
-            spectrum_fit_sum = spectrum_fit_sum + spectrum_temp # fitted spectrum
-            cpt += 1
-        
-
-spectrum_fit = spectrum_fit_sum / cpt 
-
-
-
-
-
-def spatial_avg(array_x, func, spat_bin, x, y):
-    # Inputs : 
-    # array_x : x scale (such as wvlgth_bin), of size N
-    # func : any function
-    # spat_bin : width of spatial averaging window
-    # x,y : center of the averaging window
-    array_sum = np.zeros(array_x.size, dtype=float)
-    cpt = 0
-    for i in range(x-spat_bin, x+spat_bin+1):
-        for j in range(y-spat_bin, y+spat_bin+1):
-            array_temp = func(array_x, i, j)
-            if not np.isnan(array_temp).any() :
-                array_sum = array_sum + array_temp
-                cpt += 1
-    array_avg = array_sum / cpt
-    return array_avg
-
-
-
-
-
-
-def ppix620(wvlgth_bin, x, y):
-    spectr620_coef = func620(wvlgth_bin-params_tab[x,y,3])*params_tab[x,y,0]
-    return spectr620_coef
-
-def ppix634(wvlgth_bin, x, y):
-    spectr634_coef = func634(wvlgth_bin-params_tab[x,y,4])*params_tab[x,y,1]
-    return spectr634_coef
-
-def lipofuscin(wvlgth_bin, x, y):
-    spectr_lipo_coef = params_tab[x,y,2] * np.exp(-(params_tab[x,y,5]-wvlgth_bin)**2/params_tab[x,y,6]**2)   
-    return spectr_lipo_coef
-
-    
-
-spectr620_coef = spatial_avg(wvlgth_bin, ppix620, spat_bin, x, y)
-spectr634_coef = spatial_avg(wvlgth_bin, ppix634, spat_bin, x, y)
-spectr_lipo_coef = spatial_avg(wvlgth_bin, lipofuscin, spat_bin, x, y)
-
-
+spectrum_fit = spectr620_coef + spectr634_coef + spectr_lipo_coef
 
 
 
@@ -238,7 +168,7 @@ spectr_lipo_coef = spatial_avg(wvlgth_bin, lipofuscin, spat_bin, x, y)
 
 fig, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=False)
 # fig, ax1 = plt.subplots(1, 1, sharex=False)
-fig.suptitle('Spectrum at position x=' + str(x) + ' y=' + str(y) + ' ' + 'spatial avg =' + str(spat_bin))
+fig.suptitle('Spectrum at position x=' + str(x) + ' y=' + str(y))
 ax1.plot(wvlgth_bin, spectrum,  label='spectrum', color='black')
 ax1.plot(wvlgth_bin, spectrum_fit, label='fit', color='black', linestyle='dashed')
 ax1.plot(wvlgth_bin, spectr620_coef, label='Pp620', color='red', linestyle='dashed') 
@@ -256,7 +186,7 @@ ax3.grid()
 if legend_on == True :
     fig.legend()
 if savefig_spectrum == True :
-    fig.savefig(root_savefig + num_patient + num_biopsy + '_' + type_reco + '_x-' + str(x) + '_y-' + str(y) + '_avg-' + str(spat_bin) + '_spectrum.png', bbox_inches='tight')
+    fig.savefig(root_savefig + num_patient + num_biopsy + '_' + type_reco + '_x-' + str(x) + '_y-' + str(y) + '_spectrum.png', bbox_inches='tight')
     
     
     
@@ -309,6 +239,74 @@ if savefig_map:
 
 
 
+
+
+
+#%% Show averaged area on PpIX620 and 634 maps : 
+
+mksize = 4
+show_spectrum_pos = True
+
+file_params = root_saveresults + num_patient +  type_reco + '/' + num_biopsy + '_' + type_reco + '_fit_params.npy'
+params_tab = np.load(file_params)    
+    
+
+min_ppix = np.amin([np.nanmin(params_tab[:,:,0]), np.nanmin(params_tab[:,:,1])]) # minimum for Protoporphyrin IX colormap
+max_ppix = np.amax([np.nanmax(params_tab[:,:,0]), np.nanmax(params_tab[:,:,1])])
+
+    
+def func_plot_map_nb(params_tab, nb, show_spectrum_pos, x, y, c_lim):
+    # plot abundance map number "nb"
+    plt.figure("map nb" + str(nb))
+    plt.clf()
+    plt.title("map nb" + str(nb))
+    plt.imshow(params_tab[:,:,nb])
+    if c_lim == True :
+        plt.clim(min_ppix, max_ppix)
+    plt.colorbar()
+    plt.grid()
+    if show_spectrum_pos == True :
+        plt.plot(y,x, "or", markersize = mksize)
+
+
+
+c_lim = True 
+
+
+func_plot_map_nb(params_tab, 0, show_spectrum_pos, x, y, c_lim)
+ax_map0 = plt.gca()
+rect = mpl.patches.Rectangle((rect_y, rect_x), rect_width, rect_height, linewidth=1, edgecolor='red', facecolor='none')
+ax_map0.add_patch(rect)
+fig_map0 = plt.gcf()
+fig_map0.savefig(root_savefig + num_patient + num_biopsy + '_' + type_reco + '_x-' + str(x) + '_y-' + str(y) + '_avg-' + str(spat_bin) + '_avg_PpiX620_map.png', bbox_inches='tight')
+
+
+
+func_plot_map_nb(params_tab, 1, show_spectrum_pos, x, y, c_lim)    
+ax_map1 = plt.gca()
+rect = mpl.patches.Rectangle((rect_y, rect_x), rect_width, rect_height, linewidth=1, edgecolor='red', facecolor='none')
+ax_map1.add_patch(rect)
+fig_map1 = plt.gcf()
+fig_map1.savefig(root_savefig + num_patient + num_biopsy + '_' + type_reco + '_x-' + str(x) + '_y-' + str(y) + '_avg-' + str(spat_bin) + '_avg_PpiX634_map.png', bbox_inches='tight')
+
+
+'''
+fig_map, (ax1_map, ax2_map) = plt.subplots(1, 2, sharey=False)
+fig_map.suptitle('PpIX 620 and 634 maps, averaged with spat_bin =' + str(spat_bin))    
+ax1_map.imshow(params_tab[:,:,0])
+ax1_map.grid()
+
+    
+  
+plt.imshow(coef_P620)
+plt.grid()
+plt.clim(min_ppix, max_ppix)
+plt.colorbar()
+plt.savefig(root_maps + num_patient + num_biops + '_' + type_reco + '_coef_P620_map.png', bbox_inches='tight')
+plt.close()  
+    
+'''   
+    
 
 
 #%%    
