@@ -24,13 +24,15 @@ from snr_functions import compute_snr
 
 #%%
 
-savefig_map = True
-savedata = True
-savefig_hist = True
+savefig_map = False
+savenpy_map = True
+savedata = False
+savefig_hist = False
 
-type_reco = 'had_reco'
+type_reco = 'nn_reco'
 
-root_saveresults = 'C:/fitresults_250317_full-spectra/'
+# root_saveresults = 'C:/fitresults_250327_full-spectra_spat-bin_0/'
+root_saveresults = 'C:/fitresults_250331_nn_reco/'
 
 
 file_wvlgth = root_saveresults + 'wavelengths_mask_bin.npy'
@@ -92,7 +94,8 @@ for index, file in enumerate(list_spectrum_files) :
     plt.colorbar()
     if savefig_map == True :
         plt.savefig(root_savefig + num_patient + num_biopsy + type_reco + '_std_map.png',  bbox_inches='tight')
-    
+    if savenpy_map == True :
+        np.save(root_savefig + num_patient + num_biopsy + type_reco + '_std_map.npy', std_tab, allow_pickle=True)
     
             
     plt.figure('SNR')
@@ -101,7 +104,8 @@ for index, file in enumerate(list_spectrum_files) :
     plt.colorbar()
     if savefig_map == True :
         plt.savefig(root_savefig + num_patient + num_biopsy + type_reco + '_snr_map.png',  bbox_inches='tight')
-    
+    if savenpy_map == True :
+        np.save(root_savefig + num_patient + num_biopsy + type_reco + '_snr_map.npy', snr_tab, allow_pickle=True)
     
     
     mean_std = np.nanmean(std_tab)
@@ -118,9 +122,16 @@ for index, file in enumerate(list_spectrum_files) :
     max_snr_tab[index] = max_snr
         
 
+#%% Save in csv format :
+
+# std_path = root_savefig + type_reco + '_mean_std_tab.csv'
+
+mean_snr_path = root_savefig + type_reco + '_mean_snr_tab.csv'
+max_snr_path = root_savefig + type_reco + '_max_snr_tab.csv'
 
 
-
+np.savetxt(mean_snr_path, mean_snr_tab, delimiter=',', fmt='%s')
+np.savetxt(max_snr_path, max_snr_tab, delimiter=',', fmt='%s')
 
 
 #######################################################################################
@@ -137,6 +148,7 @@ plt.xlabel("Measurement N°")
 plt.ylabel("Mean SNR value")
 if save_stats : 
     plt.savefig(root_savefig + type_reco + '_mean_snr_all_measurements', bbox_inches = 'tight')
+
 
 
 fig, ax = plt.subplots(1, 1, figsize = [16, 8])
